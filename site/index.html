@@ -6,7 +6,7 @@
     <title>ShiftMemory - Cognee Hackathon</title>
     <meta
       name="description"
-      content="ShiftMemory is a Cognee-backed memory architecture for secure shift handoffs across sessions, agents, and teams."
+      content="ShiftMemory is a Cognee-backed shift handoff product that keeps useful context alive across notes, handoffs, Q&A, feedback, and deletion."
     />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
@@ -17,158 +17,206 @@
         <span>ShiftMemory</span>
       </a>
       <nav aria-label="Primary navigation">
+        <a href="#problem">Problem</a>
+        <a href="#flow">Flow</a>
         <a href="#cognee">Cognee</a>
-        <a href="#architecture">Architecture</a>
-        <a href="#security">Security</a>
         <a href="#docs">Docs</a>
-        <a href="demo.html">Demo</a>
+        <a class="nav-demo" href="demo.html">Demo</a>
       </nav>
     </header>
 
     <main id="top">
-      <section class="intro band">
-        <div class="intro-copy">
-          <p class="eyebrow">WeMakeDevs x Cognee Hackathon</p>
-          <h1>Persistent AI memory for high-stakes team handoffs.</h1>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Cognee hackathon</p>
+          <h1>The morning shift should not start from zero.</h1>
           <p class="lede">
-            ShiftMemory turns Cognee into the durable memory layer for shift-based
-            teams. Workers add normal notes, supervisors review source-backed
-            handoffs, and agents recall the same case memory across sessions.
+            ShiftMemory gives a team one shared memory for what changed, what still
+            needs attention, and why it matters. A worker leaves a note. The next
+            shift gets a cited handoff. A supervisor fixes mistakes. Cognee keeps
+            that context usable across sessions and agents.
           </p>
           <div class="actions">
-            <a class="button primary" href="demo.html">Open Demo</a>
-            <a class="button" href="#docs">Read Engineering Packet</a>
+            <a class="button primary" href="demo.html">Try the workflow</a>
+            <a class="button secondary" href="#cognee">See how Cognee is used</a>
           </div>
         </div>
-        <div class="proof-panel" aria-label="Memory lifecycle summary">
-          <div class="proof-row remember">
+
+        <aside class="handoff-preview" aria-label="ShiftMemory handoff preview">
+          <div class="preview-head">
+            <span>Resident Avery</span>
+            <strong>Morning handoff</strong>
+          </div>
+          <div class="note-stream">
+            <p><span>7:42 PM</span> Family asked for a morning callback before 10.</p>
+            <p><span>8:10 PM</span> Hydration was lower than usual. Check again at breakfast.</p>
+            <p><span>9:05 PM</span> Picture cards worked better than open-ended prompts.</p>
+          </div>
+          <div class="handoff-lines">
+            <p><b>Start here:</b> call family before 10 and mention the hydration check.</p>
+            <p><b>Watch:</b> breakfast hydration; previous shift flagged it as a risk.</p>
+            <p><b>Use:</b> picture cards for speech practice.</p>
+          </div>
+          <div class="source-strip" aria-label="Memory lifecycle">
             <span>remember</span>
-            <strong>notes, files, decisions</strong>
-          </div>
-          <div class="proof-row recall">
             <span>recall</span>
-            <strong>handoff and Q&amp;A context</strong>
-          </div>
-          <div class="proof-row improve">
             <span>improve</span>
-            <strong>supervisor feedback</strong>
-          </div>
-          <div class="proof-row forget">
             <span>forget</span>
-            <strong>corrections and retention</strong>
+          </div>
+        </aside>
+      </section>
+
+      <section class="story" id="problem">
+        <div class="section-kicker">Why this exists</div>
+        <div class="story-grid">
+          <h2>Handoffs fail when the next person has to reconstruct the past.</h2>
+          <div class="story-copy">
+            <p>
+              Most tools only work after someone gathers all the context. Real
+              shift work is the opposite. The context is already scattered across
+              notes, files, small decisions, and things people forgot to repeat.
+            </p>
+            <p>
+              ShiftMemory is not trying to be a medical assistant. It is a workflow
+              memory system: keep the useful facts, cite where they came from, let
+              a human correct them, and remove what should not stay.
+            </p>
           </div>
         </div>
       </section>
 
-      <section class="band split" id="problem">
-        <div>
-          <p class="eyebrow">Problem</p>
-          <h2>Generic AI can summarize a shift. It cannot remember the next one.</h2>
-        </div>
-        <p>
-          Shift work depends on context that is scattered across notes, chats,
-          files, and people's memory. The MVP uses caregiving as the demo wedge,
-          but the architecture applies to support, logistics, field operations,
-          incident response, and any workflow where handoff failures are expensive.
-        </p>
+      <section class="flow-section" id="flow">
+        <div class="section-kicker">The product flow</div>
+        <h2>A simple workflow for the user. A real memory lifecycle underneath.</h2>
+        <ol class="journey">
+          <li>
+            <span class="step-number">1</span>
+            <div>
+              <h3>Leave the shift note</h3>
+              <p>The worker writes what changed. To them, it feels like normal note-taking.</p>
+            </div>
+            <strong>Cognee remembers it as case memory.</strong>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <div>
+              <h3>Generate the next handoff</h3>
+              <p>The next shift asks for the handoff and sees a short, source-backed brief.</p>
+            </div>
+            <strong>Cognee recalls the right context.</strong>
+          </li>
+          <li>
+            <span class="step-number">3</span>
+            <div>
+              <h3>Correct what matters</h3>
+              <p>A supervisor marks a detail important or fixes the way it was summarized.</p>
+            </div>
+            <strong>Cognee improves future recall.</strong>
+          </li>
+          <li>
+            <span class="step-number">4</span>
+            <div>
+              <h3>Remove what should not stay</h3>
+              <p>Incorrect, stale, or sensitive details can be removed from future handoffs.</p>
+            </div>
+            <strong>Cognee forgets that memory.</strong>
+          </li>
+        </ol>
       </section>
 
-      <section class="band" id="cognee">
-        <p class="eyebrow">Cognee usage</p>
-        <h2>Cognee is the memory substrate, not a checkbox integration.</h2>
-        <div class="grid four">
-          <article>
-            <h3>Remember</h3>
-            <p>Store shift notes, uploaded files, confirmed handoffs, task events, and supervisor decisions as case memory.</p>
-          </article>
-          <article>
-            <h3>Recall</h3>
-            <p>Retrieve scoped memory for generated handoffs, case Q&amp;A, timeline reconstruction, and judge trace proof.</p>
-          </article>
-          <article>
-            <h3>Improve</h3>
-            <p>Feed supervisor corrections and importance signals back into memory so future handoffs get better.</p>
-          </article>
-          <article>
-            <h3>Forget</h3>
-            <p>Remove incorrect, stale, sensitive, or expired memories and verify they no longer appear in recall.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="band" id="architecture">
-        <p class="eyebrow">Architecture</p>
-        <h2>Backend-controlled memory with clear trust boundaries.</h2>
-        <div class="pipeline" aria-label="Architecture pipeline">
-          <div>Web App</div>
-          <div>Backend API</div>
-          <div>Memory Service</div>
-          <div>Cognee Cloud</div>
-          <div>LLM Provider</div>
-          <div>Source-backed Handoff</div>
-        </div>
-        <div class="grid three">
-          <article>
-            <h3>Case-scoped datasets</h3>
-            <p>Each MVP case uses its own Cognee dataset to make isolation easy to reason about and easy to prove.</p>
-          </article>
-          <article>
-            <h3>Bounded LLM context</h3>
-            <p>The LLM only sees authorized recalled memory. It never chooses tenant, case, or dataset scope.</p>
-          </article>
-          <article>
-            <h3>Judge trace</h3>
-            <p>A separate trace view shows Cognee operations, source IDs, result counts, and latency for reviewers.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="band" id="security">
-        <p class="eyebrow">Security and SRE</p>
-        <h2>Memory has to be secure before it can be useful.</h2>
-        <div class="grid three">
-          <article>
-            <h3>Threat model first</h3>
-            <p>Controls cover tenant leakage, prompt injection, hallucination, file upload abuse, and deletion failure.</p>
-          </article>
-          <article>
-            <h3>Operational readiness</h3>
-            <p>SLOs, alerts, runbooks, readiness checks, and balance guardrails are documented before implementation.</p>
-          </article>
-          <article>
-            <h3>Synthetic demo data</h3>
-            <p>The hackathon build must not claim healthcare compliance or use real sensitive data.</p>
-          </article>
+      <section class="cognee-section" id="cognee">
+        <div class="section-kicker">Where Cognee fits</div>
+        <div class="cognee-layout">
+          <div>
+            <h2>Cognee is the part that makes the product more than a prompt.</h2>
+            <p>
+              The UI stays human: notes, handoffs, questions, corrections, deletion.
+              The backend maps those actions to Cognee's memory operations and keeps
+              the LLM on a short leash: only authorized, recalled case context goes
+              into a generated answer.
+            </p>
+          </div>
+          <div class="operation-list" aria-label="Cognee operation mapping">
+            <div>
+              <span>User adds a note or file</span>
+              <strong>remember</strong>
+            </div>
+            <div>
+              <span>User asks "what changed?"</span>
+              <strong>recall</strong>
+            </div>
+            <div>
+              <span>Supervisor marks what mattered</span>
+              <strong>improve</strong>
+            </div>
+            <div>
+              <span>Team removes bad or stale context</span>
+              <strong>forget</strong>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="band demo-preview" id="demo">
-        <div class="section-heading">
-          <p class="eyebrow">Visual demo</p>
-          <h2>Current product mock</h2>
+      <section class="proof-section" id="architecture">
+        <div class="section-kicker">For reviewers</div>
+        <h2>The submission separates product experience from engineering proof.</h2>
+        <div class="proof-rail">
           <p>
-            This workflow demo shows how shift notes, handoffs, questions,
-            feedback, and deletion map to Cognee's remember, recall, improve,
-            and forget lifecycle.
+            Normal users should not have to know what Cognee is. They should know
+            whether the handoff is useful and where each claim came from.
+          </p>
+          <p>
+            Judges and engineers get the proof: case-scoped datasets, backend-only
+            API keys, source references, memory operation traces, deletion behavior,
+            and SRE runbooks.
           </p>
         </div>
-        <iframe title="ShiftMemory demo preview" src="demo.html" loading="lazy"></iframe>
+        <div class="architecture-line" aria-label="Architecture summary">
+          <span>Web app</span>
+          <span>Backend API</span>
+          <span>Memory service</span>
+          <span>Cognee Cloud</span>
+          <span>LLM</span>
+          <span>Cited handoff</span>
+        </div>
       </section>
 
-      <section class="band" id="docs">
-        <p class="eyebrow">Engineering packet</p>
-        <h2>Pre-MVP documents</h2>
-        <div class="doc-list">
-          <a href="docs/00_INDEX.md">00 - Index</a>
-          <a href="docs/01_Product_Strategy_and_Judging.md">01 - Product Strategy and Judging Fit</a>
-          <a href="docs/02_Cognee_Memory_Architecture.md">02 - Cognee Memory Architecture</a>
-          <a href="docs/03_AI_Agent_Runtime.md">03 - AI Agent Runtime</a>
-          <a href="docs/04_System_Architecture.md">04 - System Architecture</a>
-          <a href="docs/05_API_Contract.md">05 - API Contract</a>
-          <a href="docs/06_Security_Threat_Model.md">06 - Security Threat Model</a>
-          <a href="docs/07_SRE_Operational_Readiness.md">07 - SRE Operational Readiness</a>
-          <a href="docs/08_MVP_Roadmap_and_Acceptance.md">08 - MVP Roadmap and Acceptance</a>
-          <a href="docs/09_Submission_Pitch_Deck_Outline.md">09 - Pitch Deck Outline</a>
+      <section class="demo-section" id="demo">
+        <div>
+          <div class="section-kicker">Try it</div>
+          <h2>Open the workflow demo when you want to click through the product.</h2>
+          <p>
+            The demo shows the user-facing loop: add memory, generate a handoff,
+            ask a question, mark a detail important, and forget a stale note.
+          </p>
+        </div>
+        <a class="button primary" href="demo.html">Open workflow demo</a>
+      </section>
+
+      <section class="docs-section" id="docs">
+        <div class="section-kicker">Engineering packet</div>
+        <h2>The deeper docs are here when a judge wants the architecture.</h2>
+        <div class="doc-links">
+          <a href="docs/02_Cognee_Memory_Architecture.md">
+            <span>Cognee memory architecture</span>
+            <small>datasets, remember, recall, improve, forget</small>
+          </a>
+          <a href="docs/05_API_Contract.md">
+            <span>API contract</span>
+            <small>backend routes, schemas, rate limits</small>
+          </a>
+          <a href="docs/06_Security_Threat_Model.md">
+            <span>Security model</span>
+            <small>tenant isolation, prompt injection, deletion</small>
+          </a>
+          <a href="docs/07_SRE_Operational_Readiness.md">
+            <span>SRE readiness</span>
+            <small>SLOs, alerts, runbooks, failure behavior</small>
+          </a>
+          <a href="docs/08_MVP_Roadmap_and_Acceptance.md">
+            <span>MVP roadmap</span>
+            <small>acceptance checks and demo script</small>
+          </a>
         </div>
       </section>
     </main>
