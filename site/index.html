@@ -102,10 +102,11 @@
       <section class="product-section" id="product">
         <div class="section-kicker">Product experience</div>
         <div class="product-heading">
-          <h2>Each role gets the screen they need.</h2>
+          <h2>Each signed-in role gets the workspace they need.</h2>
           <p>
-            Caregivers write notes, leads read handoffs, supervisors clean up
-            memory, and reviewers can inspect the technical proof only when needed.
+            JWT login and server-side role checks decide which patients and
+            actions each person can access. Caregivers write notes, leads read
+            handoffs, supervisors assign shifts, and reviewers inspect proof.
           </p>
         </div>
 
@@ -295,9 +296,9 @@
         },
         supervisor: {
           label: "Supervisor",
-          title: "Review keeps future handoffs useful.",
+          title: "The supervisor assigns shifts and keeps handoffs useful.",
           copy:
-            "Supervisors mark high-signal notes important and remove stale instructions before the next worker repeats them.",
+            "Supervisors decide which night and morning caregivers own each resident, then mark high-signal notes important or remove stale instructions.",
           memory: "Behind the scenes: Cognee improves and forgets memory.",
           html: `
             <div class="review-row">

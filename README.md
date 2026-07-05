@@ -8,10 +8,13 @@ That is the hackathon use case: a memory-backed handoff assistant for teams wher
 
 ## What The Demo Proves
 
+- Sign in as a demo user and receive a JWT.
+- See only the patients assigned to that role.
 - Add a night note.
 - Refresh or restart the app.
 - Generate the morning handoff without pasting context again.
 - Ask a question like "What should I tell the family?"
+- Sign in as supervisor, assign night and morning caregivers to residents, and review stale notes.
 - Mark a note important and see future handoffs prioritize it.
 - Remove a wrong note and confirm it no longer appears.
 - Open the proof screen to show the memory lifecycle.
@@ -22,9 +25,16 @@ The submitted product uses three separate responsibilities:
 
 - Gemini is the reasoning layer. It understands raw notes, creates the recall plan, and writes the final handoff.
 - Cognee is the memory layer. It stores remembered notes and retrieves the relevant context later.
-- The FastAPI backend is the verifier. It owns keys, case boundaries, source checks, audit traces, and failure handling.
+- The FastAPI backend is the verifier and access-control boundary. It owns JWT auth, role checks, patient assignments, keys, case boundaries, source checks, audit traces, and failure handling.
 
 The browser never receives Cognee or LLM keys. The frontend talks only to the FastAPI backend.
+
+## Roles And Access
+
+- Night caregiver: sees assigned patients and can save night-shift notes.
+- Morning lead: sees assigned patients and can generate handoffs or ask follow-up questions.
+- Supervisor: sees the supervisor dashboard, assigns night/morning workers to patients, and can prioritize or remove notes.
+- Demo reviewer: can move through all screens and inspect proof traces for the hackathon walkthrough.
 
 ## How Cognee Is Used
 

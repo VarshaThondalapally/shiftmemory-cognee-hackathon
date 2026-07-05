@@ -14,6 +14,7 @@ import {
 import "./styles.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const AUTH_STORAGE_KEY = "handoff-demo-auth";
 
 const screens = [
   {
@@ -65,6 +66,35 @@ const screenToRole = {
   proof: "proof",
 };
 
+const roleToDemoUser = {
+  notes: "night-demo",
+  handoff: "morning-demo",
+  review: "supervisor-demo",
+  proof: "judge-demo",
+};
+
+function readStoredAuth() {
+  if (typeof window === "undefined") return null;
+  try {
+    return JSON.parse(window.localStorage.getItem(AUTH_STORAGE_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function defaultViewForUser(user) {
+  return user?.default_view || {
+    night_caregiver: "notes",
+    morning_lead: "handoff",
+    supervisor: "review",
+    demo_judge: "proof",
+  }[user?.role] || "notes";
+}
+
+function canUseDemoTabs(user) {
+  return user?.role === "demo_judge";
+}
+
 function initialViewFromUrl() {
   return initialRoleEntryFromUrl() || "notes";
 }
@@ -77,9 +107,13 @@ function initialRoleEntryFromUrl() {
 }
 
 function App() {
+  const [auth, setAuth] = useState(readStoredAuth);
+  const [demoUsers, setDemoUsers] = useState([]);
+  const [loginBusy, setLoginBusy] = useState(false);
   const [cases, setCases] = useState([]);
   const [caseId, setCaseId] = useState("resident-avery");
   const [caseData, setCaseData] = useState(null);
+  const [team, setTeam] = useState(null);
   const [handoff, setHandoff] = useState(null);
   const [handoffSources, setHandoffSources] = useState([]);
   const [evidence, setEvidence] = useState(null);
@@ -98,26 +132,82 @@ function App() {
   const [error, setError] = useState("");
   const activeCaseIdRef = useRef(caseId);
 
+  const currentUser = auth?.user || null;
+  const authenticated = Boolean(auth?.access_token && currentUser);
   const selectedCaseData = caseData?.id === caseId ? caseData : null;
   const memories = selectedCaseData?.memories || [];
   const currentCase = cases.find((item) => item.id === caseId);
   const importantCount = useMemo(() => memories.filter((item) => item.important).length, [memories]);
   const reviewCount = useMemo(() => memories.filter((item) => item.type === "review").length, [memories]);
-  const activeScreen = screens.find((screen) => screen.id === view) || screens[0];
-  const roleSpecificEntry = Boolean(roleEntry);
+  const demoTabsEnabled = canUseDemoTabs(currentUser);
+  const roleSpecificEntry = authenticated && !demoTabsEnabled;
+  const activeView = roleSpecificEntry ? defaultViewForUser(currentUser) : view;
+  const activeScreen = screens.find((screen) => screen.id === activeView) || screens[0];
   const displayedCaseName = selectedCaseData?.name || currentCase?.name || "Care recipient";
   const displayedTeam = selectedCaseData?.team || currentCase?.team || "Home care handoff";
 
   async function api(path, options = {}) {
+    const { headers: optionHeaders, ...requestOptions } = options;
+    const headers = { "Content-Type": "application/json", ...(optionHeaders || {}) };
+    if (auth?.access_token) {
+      headers.Authorization = `Bearer ${auth.access_token}`;
+    }
     const response = await fetch(`${API_URL}${path}`, {
-      headers: { "Content-Type": "application/json" },
-      ...options,
+      ...requestOptions,
+      headers,
     });
+    if (response.status === 401 && authenticated) {
+      logout();
+      throw new Error("Session expired. Please sign in again.");
+    }
     if (!response.ok) {
       const text = await response.text();
       throw new Error(text || "Request failed");
     }
     return response.json();
+  }
+
+  async function loginAs(userId) {
+    setLoginBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_URL}/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, password: "demo" }),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Login failed");
+      }
+      const session = await response.json();
+      setAuth(session);
+      window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+      setView(defaultViewForUser(session.user));
+      setRoleEntry("");
+      setCases([]);
+      setTeam(null);
+      setCaseData(null);
+      setEvidence(null);
+      clearWorkflowState();
+    } catch (err) {
+      setError(cleanError(err));
+    } finally {
+      setLoginBusy(false);
+    }
+  }
+
+  function logout() {
+    setAuth(null);
+    setCases([]);
+    setTeam(null);
+    setCaseData(null);
+    setEvidence(null);
+    setHealth(null);
+    clearWorkflowState();
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    }
   }
 
   function clearWorkflowState() {
@@ -154,7 +244,7 @@ function App() {
     try {
       await action();
       await refreshCaseData(targetCaseId);
-      if (view === "proof") {
+      if (activeView === "proof") {
         await refreshProofData(targetCaseId);
       }
     } catch (err) {
@@ -187,23 +277,56 @@ function App() {
 
   useEffect(() => {
     function syncViewToBrowserUrl() {
+      if (authenticated) return;
       const nextRoleEntry = initialRoleEntryFromUrl();
       setRoleEntry(nextRoleEntry);
       setView(nextRoleEntry || "notes");
     }
     window.addEventListener("popstate", syncViewToBrowserUrl);
     return () => window.removeEventListener("popstate", syncViewToBrowserUrl);
-  }, []);
+  }, [authenticated]);
 
   useEffect(() => {
     let ignore = false;
 
+    async function loadDemoUsers() {
+      try {
+        const response = await fetch(`${API_URL}/v1/auth/demo-users`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!ignore) setDemoUsers(data.users || []);
+      } catch {
+        if (!ignore) setDemoUsers([]);
+      }
+    }
+
+    if (!authenticated) {
+      loadDemoUsers();
+    }
+    return () => {
+      ignore = true;
+    };
+  }, [authenticated]);
+
+  useEffect(() => {
+    if (!authenticated) return;
+    let ignore = false;
+
     async function loadShell() {
       try {
-        const [healthResult, caseList] = await Promise.all([api("/healthz"), api("/v1/cases")]);
+        const requests = [api("/healthz"), api("/v1/cases")];
+        if (currentUser?.role === "supervisor" || currentUser?.role === "demo_judge") {
+          requests.push(api("/v1/team/assignments"));
+        }
+        const [healthResult, caseList, teamResult] = await Promise.all(requests);
         if (!ignore) {
           setHealth(healthResult);
-          setCases(caseList.cases);
+          const nextCases = caseList.cases || [];
+          setCases(nextCases);
+          setTeam(teamResult || null);
+          if (nextCases.length && !nextCases.some((item) => item.id === caseId)) {
+            changeCase(nextCases[0].id);
+          }
         }
       } catch (err) {
         if (!ignore) setError(cleanError(err));
@@ -214,9 +337,10 @@ function App() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [authenticated, auth?.access_token]);
 
   useEffect(() => {
+    if (!authenticated || !caseId) return;
     let ignore = false;
     const targetCaseId = caseId;
     activeCaseIdRef.current = targetCaseId;
@@ -242,10 +366,10 @@ function App() {
     return () => {
       ignore = true;
     };
-  }, [caseId]);
+  }, [authenticated, auth?.access_token, caseId]);
 
   useEffect(() => {
-    if (view !== "proof") return;
+    if (!authenticated || activeView !== "proof") return;
     let ignore = false;
     const targetCaseId = caseId;
     setProofLoading(true);
@@ -271,7 +395,7 @@ function App() {
     return () => {
       ignore = true;
     };
-  }, [caseId, view]);
+  }, [authenticated, auth?.access_token, caseId, activeView]);
 
   async function addNote(event) {
     event.preventDefault();
@@ -336,6 +460,24 @@ function App() {
     });
   }
 
+  async function updateShiftAssignment(payload) {
+    setBusy(true);
+    setError("");
+    try {
+      const data = await api("/v1/team/assignments", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setTeam(data.team);
+      const caseList = await api("/v1/cases");
+      setCases(caseList.cases || []);
+    } catch (err) {
+      setError(cleanError(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function resetDemo() {
     await run(async () => {
       await api("/v1/demo/reset", { method: "POST" });
@@ -343,8 +485,20 @@ function App() {
       setHandoffSources([]);
       setAnswer(null);
       setAnswerSources([]);
-      selectView(view);
+      selectView(activeView);
     });
+  }
+
+  if (!authenticated) {
+    return (
+      <LoginScreen
+        users={demoUsers}
+        suggestedUserId={roleToDemoUser[roleEntry] || "night-demo"}
+        busy={loginBusy}
+        error={error}
+        onLogin={loginAs}
+      />
+    );
   }
 
   return (
@@ -357,10 +511,19 @@ function App() {
         </div>
 
         <div className="hero-panel">
+          <div className="user-strip" aria-label="Signed in user">
+            <div>
+              <span>{currentUser.title}</span>
+              <strong>{currentUser.name}</strong>
+            </div>
+            <button className="quiet-button" type="button" onClick={logout}>
+              Sign out
+            </button>
+          </div>
           <div className="case-switcher">
             <label>
               Care recipient
-              <select value={caseId} onChange={(event) => changeCase(event.target.value)}>
+              <select value={caseId} onChange={(event) => changeCase(event.target.value)} disabled={!cases.length}>
                 {cases.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}
@@ -368,7 +531,7 @@ function App() {
                 ))}
               </select>
             </label>
-            {(!roleSpecificEntry || view === "proof") && (
+            {(!roleSpecificEntry || activeView === "proof" || currentUser.role === "supervisor") && (
               <button className="quiet-button" type="button" onClick={resetDemo} disabled={busy} title="Reset demo notes">
                 <RotateCcw size={17} />
                 Reset demo
@@ -400,7 +563,7 @@ function App() {
             return (
               <button
                 key={screen.id}
-                className={view === screen.id ? "tab active" : "tab"}
+                className={activeView === screen.id ? "tab active" : "tab"}
                 type="button"
                 onClick={() => selectView(screen.id)}
               >
@@ -416,7 +579,7 @@ function App() {
 
       <main className="workspace">
         <section className="stage">
-          {view === "handoff" && (
+          {activeView === "handoff" && (
             <HandoffScreen
               busy={busy || caseLoading}
               loading={caseLoading}
@@ -432,7 +595,7 @@ function App() {
               onAskPreset={(questionText) => askQuestion(null, questionText)}
             />
           )}
-          {view === "notes" && (
+          {activeView === "notes" && (
             <NotesScreen
               busy={busy || caseLoading}
               loading={caseLoading}
@@ -444,20 +607,173 @@ function App() {
               onSubmit={addNote}
             />
           )}
-          {view === "review" && (
-            <ReviewScreen
-              busy={busy || caseLoading}
-              loading={caseLoading}
-              memories={memories}
-              feedback={feedback}
-              setFeedback={setFeedback}
-              onImprove={improve}
-              onForget={forget}
-            />
+          {activeView === "review" && (
+            currentUser.role === "supervisor" ? (
+              <SupervisorWorkspace
+                busy={busy || caseLoading}
+                loading={caseLoading}
+                memories={memories}
+                feedback={feedback}
+                setFeedback={setFeedback}
+                onImprove={improve}
+                onForget={forget}
+                team={team}
+                onAssign={updateShiftAssignment}
+              />
+            ) : (
+              <ReviewScreen
+                busy={busy || caseLoading}
+                loading={caseLoading}
+                memories={memories}
+                feedback={feedback}
+                setFeedback={setFeedback}
+                onImprove={improve}
+                onForget={forget}
+              />
+            )
           )}
-          {view === "proof" && <ProofScreen evidence={evidence} health={health} loading={proofLoading} />}
+          {activeView === "proof" && <ProofScreen evidence={evidence} health={health} loading={proofLoading} />}
         </section>
       </main>
+    </div>
+  );
+}
+
+function LoginScreen({ users, suggestedUserId, busy, error, onLogin }) {
+  const fallbackUsers = [
+    { id: "night-demo", name: "Nia Brooks", title: "Night caregiver", role: "night_caregiver" },
+    { id: "morning-demo", name: "Omar Chen", title: "Morning lead", role: "morning_lead" },
+    { id: "supervisor-demo", name: "Rosa Lee", title: "Care supervisor", role: "supervisor" },
+    { id: "judge-demo", name: "Hackathon judge", title: "Demo reviewer", role: "demo_judge" },
+  ];
+  const orderedUsers = [...(users.length ? users : fallbackUsers)].sort(
+    (first, second) => roleRank(first.role) - roleRank(second.role),
+  );
+  return (
+    <main className="login-page">
+      <section className="login-hero">
+        <span className="eyebrow">Authenticated care handoff</span>
+        <h1>Each person opens the workspace their role allows.</h1>
+        <p>
+          Demo sign-in issues a JWT, then the backend filters patients and actions by role. Caregivers do not see supervisor
+          tools, and supervisors manage assignments from their own dashboard.
+        </p>
+      </section>
+
+      {error && <div className="error-banner login-error">{error}</div>}
+
+      <section className="login-grid" aria-label="Demo sign in users">
+        {orderedUsers.map((user) => (
+          <button
+            key={user.id}
+            className={user.id === suggestedUserId ? "login-card suggested" : "login-card"}
+            type="button"
+            disabled={busy}
+            onClick={() => onLogin(user.id)}
+          >
+            <span>{user.title}</span>
+            <strong>{user.name}</strong>
+            <small>{loginPromiseForRole(user.role)}</small>
+          </button>
+        ))}
+      </section>
+    </main>
+  );
+}
+
+function SupervisorWorkspace({ busy, loading, memories, feedback, setFeedback, onImprove, onForget, team, onAssign }) {
+  return (
+    <div className="screen-layout">
+      <section className="assignment-panel">
+        <div className="section-title">
+          <span className="eyebrow">Supervisor dashboard</span>
+          <h2>Assign shifts before the handoff starts</h2>
+          <p>These assignments decide which patients appear in each caregiver&apos;s workspace after login.</p>
+        </div>
+        <AssignmentTable team={team} busy={busy} onAssign={onAssign} />
+      </section>
+
+      <ReviewScreen
+        busy={busy}
+        loading={loading}
+        memories={memories}
+        feedback={feedback}
+        setFeedback={setFeedback}
+        onImprove={onImprove}
+        onForget={onForget}
+      />
+    </div>
+  );
+}
+
+function AssignmentTable({ team, busy, onAssign }) {
+  const users = team?.users || [];
+  const assignments = team?.assignments || [];
+  const nightCaregivers = users.filter((user) => user.role === "night_caregiver");
+  const morningLeads = users.filter((user) => user.role === "morning_lead");
+
+  if (!assignments.length) {
+    return (
+      <div className="empty-state compact">
+        <BadgeCheck size={28} />
+        <h3>No assignments loaded</h3>
+        <p>Sign in as supervisor to load the current shift plan.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="assignment-list">
+      {assignments.map((assignment) => (
+        <article className="assignment-row" key={assignment.case_id}>
+          <div>
+            <span className="type-chip">{assignment.shift_window}</span>
+            <h3>{assignment.case_name}</h3>
+          </div>
+          <label>
+            Night caregiver
+            <select
+              value={assignment.night_caregiver_id || ""}
+              disabled={busy}
+              onChange={(event) =>
+                onAssign({
+                  case_id: assignment.case_id,
+                  night_caregiver_id: event.target.value || null,
+                  morning_lead_id: assignment.morning_lead_id || null,
+                })
+              }
+            >
+              <option value="">Unassigned</option>
+              {nightCaregivers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Morning lead
+            <select
+              value={assignment.morning_lead_id || ""}
+              disabled={busy}
+              onChange={(event) =>
+                onAssign({
+                  case_id: assignment.case_id,
+                  night_caregiver_id: assignment.night_caregiver_id || null,
+                  morning_lead_id: event.target.value || null,
+                })
+              }
+            >
+              <option value="">Unassigned</option>
+              {morningLeads.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </article>
+      ))}
     </div>
   );
 }
@@ -830,6 +1146,26 @@ function labelForType(type) {
       feedback: "Feedback",
       shift: "General",
     }[type] || "Note"
+  );
+}
+
+function roleRank(role) {
+  return {
+    night_caregiver: 1,
+    morning_lead: 2,
+    supervisor: 3,
+    demo_judge: 4,
+  }[role] || 99;
+}
+
+function loginPromiseForRole(role) {
+  return (
+    {
+      night_caregiver: "Sees assigned night-shift patients and note capture only.",
+      morning_lead: "Sees assigned morning handoffs and follow-up questions.",
+      supervisor: "Sees assignment controls, review queue, and cleanup tools.",
+      demo_judge: "Can inspect all screens and proof traces for the demo.",
+    }[role] || "Role-based workspace"
   );
 }
 

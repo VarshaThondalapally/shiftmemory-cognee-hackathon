@@ -2,11 +2,24 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+from .auth import (
+    AssignmentUpdate,
+    LoginRequest,
+    current_user,
+    demo_users,
+    login,
+    public_user,
+    require_case_access,
+    require_roles,
+    role_label,
+    team_snapshot,
+    update_assignment,
+)
 from .intelligence import HANDOFF_BUCKETS, IntelligenceError, make_intelligence_service
 from .memory import MemoryBackendError, make_memory_service
 
@@ -49,18 +62,34 @@ class FeedbackRequest(BaseModel):
     feedback: str = Field(default="", max_length=1000)
 
 
+@app.get("/v1/auth/demo-users")
+def list_demo_users() -> dict[str, Any]:
+    return {"users": demo_users()}
+
+
+@app.post("/v1/auth/login")
+def login_user(payload: LoginRequest) -> dict[str, Any]:
+    return login(payload)
+
+
+@app.get("/v1/auth/me")
+def me(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    return {"user": public_user(user)}
+
+
 @app.get("/healthz")
 def healthz() -> dict[str, Any]:
     return {"status": "ok", "memory": memory.backend_status(), "intelligence": intelligence.status()}
 
 
 @app.get("/v1/cases")
-def list_cases() -> dict[str, Any]:
-    return {"cases": memory.list_cases()}
+def list_cases(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    return {"cases": visible_cases_for(user)}
 
 
 @app.get("/v1/cases/{case_id}")
-def get_case(case_id: str) -> dict[str, Any]:
+def get_case(case_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_case_access(user, case_id)
     try:
         return memory.get_case(case_id)
     except KeyError:
@@ -68,11 +97,14 @@ def get_case(case_id: str) -> dict[str, Any]:
 
 
 @app.post("/v1/cases/{case_id}/notes")
-def add_note(case_id: str, payload: NoteCreate) -> dict[str, Any]:
+def add_note(case_id: str, payload: NoteCreate, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"night_caregiver", "supervisor", "demo_judge"})
+    require_case_access(user, case_id)
     try:
         case = memory.get_case(case_id)
-        understanding = intelligence.analyze_note(case, payload.type, payload.text, payload.source)
-        result = memory.remember(case_id, payload.type, payload.text, payload.source, understanding)
+        source = f"{role_label(user['role'])} note - {user['name']}"
+        understanding = intelligence.analyze_note(case, payload.type, payload.text, source)
+        result = memory.remember(case_id, payload.type, payload.text, source, understanding)
         return {"memory": result.item, "trace": result.trace, "understanding": understanding}
     except KeyError:
         raise HTTPException(status_code=404, detail="case_not_found")
@@ -83,7 +115,9 @@ def add_note(case_id: str, payload: NoteCreate) -> dict[str, Any]:
 
 
 @app.post("/v1/cases/{case_id}/handoff")
-def generate_handoff(case_id: str, payload: HandoffRequest) -> dict[str, Any]:
+def generate_handoff(case_id: str, payload: HandoffRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"morning_lead", "supervisor", "demo_judge"})
+    require_case_access(user, case_id)
     try:
         case = memory.get_case(case_id)
         recall_plan = intelligence.plan_recall(case, payload.focus)
@@ -109,7 +143,9 @@ def generate_handoff(case_id: str, payload: HandoffRequest) -> dict[str, Any]:
 
 
 @app.post("/v1/cases/{case_id}/ask")
-def ask_case(case_id: str, payload: AskRequest) -> dict[str, Any]:
+def ask_case(case_id: str, payload: AskRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"morning_lead", "supervisor", "demo_judge"})
+    require_case_access(user, case_id)
     try:
         case = memory.get_case(case_id)
         recalled, trace = memory.recall(
@@ -134,7 +170,9 @@ def ask_case(case_id: str, payload: AskRequest) -> dict[str, Any]:
 
 
 @app.post("/v1/cases/{case_id}/feedback")
-def improve_memory(case_id: str, payload: FeedbackRequest) -> dict[str, Any]:
+def improve_memory(case_id: str, payload: FeedbackRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"supervisor", "demo_judge"})
+    require_case_access(user, case_id)
     try:
         trace = memory.improve(case_id, payload.memory_id, payload.feedback)
         return {"trace": trace}
@@ -145,7 +183,9 @@ def improve_memory(case_id: str, payload: FeedbackRequest) -> dict[str, Any]:
 
 
 @app.delete("/v1/cases/{case_id}/memories/{memory_id}")
-def forget_memory(case_id: str, memory_id: str) -> dict[str, Any]:
+def forget_memory(case_id: str, memory_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"supervisor", "demo_judge"})
+    require_case_access(user, case_id)
     try:
         trace = memory.forget(case_id, memory_id)
         return {"trace": trace}
@@ -156,7 +196,9 @@ def forget_memory(case_id: str, memory_id: str) -> dict[str, Any]:
 
 
 @app.get("/v1/cases/{case_id}/trace")
-def memory_trace(case_id: str) -> dict[str, Any]:
+def memory_trace(case_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"supervisor", "demo_judge"})
+    require_case_access(user, case_id)
     try:
         return {"traces": list(reversed(memory.traces(case_id)))}
     except KeyError:
@@ -164,7 +206,9 @@ def memory_trace(case_id: str) -> dict[str, Any]:
 
 
 @app.get("/v1/cases/{case_id}/evidence")
-def memory_evidence(case_id: str) -> dict[str, Any]:
+def memory_evidence(case_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"supervisor", "demo_judge"})
+    require_case_access(user, case_id)
     try:
         evidence = memory.evidence(case_id)
         evidence["intelligence"] = intelligence.status()
@@ -173,12 +217,34 @@ def memory_evidence(case_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="case_not_found")
 
 
+@app.get("/v1/team/assignments")
+def get_assignments(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"supervisor", "demo_judge"})
+    return team_snapshot(memory.list_cases())
+
+
+@app.post("/v1/team/assignments")
+def assign_shift(payload: AssignmentUpdate, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"supervisor"})
+    assignment = update_assignment(payload)
+    return {"assignment": assignment, "team": team_snapshot(memory.list_cases())}
+
+
 @app.post("/v1/demo/reset")
-def reset_demo() -> dict[str, Any]:
+def reset_demo(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    require_roles(user, {"supervisor", "demo_judge"})
     try:
         return memory.reset()
     except MemoryBackendError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+
+
+def visible_cases_for(user: dict[str, Any]) -> list[dict[str, Any]]:
+    all_cases = memory.list_cases()
+    if user["role"] in {"supervisor", "demo_judge"}:
+        return all_cases
+    allowed = set(public_user(user)["assigned_case_ids"])
+    return [case for case in all_cases if case["id"] in allowed]
 
 
 def recall_for_plan(
