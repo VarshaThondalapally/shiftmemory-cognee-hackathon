@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   BadgeCheck,
@@ -93,14 +93,20 @@ function App() {
   const [answerSources, setAnswerSources] = useState([]);
   const [feedback, setFeedback] = useState("");
   const [busy, setBusy] = useState(false);
+  const [caseLoading, setCaseLoading] = useState(true);
+  const [proofLoading, setProofLoading] = useState(false);
   const [error, setError] = useState("");
+  const activeCaseIdRef = useRef(caseId);
 
-  const memories = caseData?.memories || [];
+  const selectedCaseData = caseData?.id === caseId ? caseData : null;
+  const memories = selectedCaseData?.memories || [];
   const currentCase = cases.find((item) => item.id === caseId);
   const importantCount = useMemo(() => memories.filter((item) => item.important).length, [memories]);
   const reviewCount = useMemo(() => memories.filter((item) => item.type === "review").length, [memories]);
   const activeScreen = screens.find((screen) => screen.id === view) || screens[0];
   const roleSpecificEntry = Boolean(roleEntry);
+  const displayedCaseName = selectedCaseData?.name || currentCase?.name || "Care recipient";
+  const displayedTeam = selectedCaseData?.team || currentCase?.team || "Home care handoff";
 
   async function api(path, options = {}) {
     const response = await fetch(`${API_URL}${path}`, {
@@ -114,25 +120,43 @@ function App() {
     return response.json();
   }
 
-  async function loadAll() {
-    const [healthResult, caseList, selectedCase, evidenceResult] = await Promise.all([
+  function clearWorkflowState() {
+    setHandoff(null);
+    setHandoffSources([]);
+    setAnswer(null);
+    setAnswerSources([]);
+    setFeedback("");
+  }
+
+  async function refreshCaseData(targetCaseId = caseId) {
+    const selectedCase = await api(`/v1/cases/${targetCaseId}`);
+    if (activeCaseIdRef.current === targetCaseId) {
+      setCaseData(selectedCase);
+    }
+    return selectedCase;
+  }
+
+  async function refreshProofData(targetCaseId = caseId) {
+    const [healthResult, evidenceResult] = await Promise.all([
       api("/healthz"),
-      api("/v1/cases"),
-      api(`/v1/cases/${caseId}`),
-      api(`/v1/cases/${caseId}/evidence`),
+      api(`/v1/cases/${targetCaseId}/evidence`),
     ]);
-    setHealth(healthResult);
-    setCases(caseList.cases);
-    setCaseData(selectedCase);
-    setEvidence(evidenceResult);
+    if (activeCaseIdRef.current === targetCaseId) {
+      setHealth(healthResult);
+      setEvidence(evidenceResult);
+    }
   }
 
   async function run(action) {
     setBusy(true);
     setError("");
+    const targetCaseId = caseId;
     try {
       await action();
-      await loadAll();
+      await refreshCaseData(targetCaseId);
+      if (view === "proof") {
+        await refreshProofData(targetCaseId);
+      }
     } catch (err) {
       setError(cleanError(err));
     } finally {
@@ -149,6 +173,18 @@ function App() {
     window.history.replaceState({}, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
   }
 
+  function changeCase(nextCaseId) {
+    if (nextCaseId === caseId) return;
+    activeCaseIdRef.current = nextCaseId;
+    setCaseId(nextCaseId);
+    setCaseLoading(true);
+    setCaseData(null);
+    setEvidence(null);
+    setNoteText("");
+    setError("");
+    clearWorkflowState();
+  }
+
   useEffect(() => {
     function syncViewToBrowserUrl() {
       const nextRoleEntry = initialRoleEntryFromUrl();
@@ -160,8 +196,82 @@ function App() {
   }, []);
 
   useEffect(() => {
-    run(async () => {});
+    let ignore = false;
+
+    async function loadShell() {
+      try {
+        const [healthResult, caseList] = await Promise.all([api("/healthz"), api("/v1/cases")]);
+        if (!ignore) {
+          setHealth(healthResult);
+          setCases(caseList.cases);
+        }
+      } catch (err) {
+        if (!ignore) setError(cleanError(err));
+      }
+    }
+
+    loadShell();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    const targetCaseId = caseId;
+    activeCaseIdRef.current = targetCaseId;
+    setCaseLoading(true);
+    setCaseData(null);
+    setEvidence(null);
+    clearWorkflowState();
+
+    async function loadSelectedCase() {
+      try {
+        const selectedCase = await api(`/v1/cases/${targetCaseId}`);
+        if (!ignore && activeCaseIdRef.current === targetCaseId) {
+          setCaseData(selectedCase);
+        }
+      } catch (err) {
+        if (!ignore && activeCaseIdRef.current === targetCaseId) setError(cleanError(err));
+      } finally {
+        if (!ignore && activeCaseIdRef.current === targetCaseId) setCaseLoading(false);
+      }
+    }
+
+    loadSelectedCase();
+    return () => {
+      ignore = true;
+    };
   }, [caseId]);
+
+  useEffect(() => {
+    if (view !== "proof") return;
+    let ignore = false;
+    const targetCaseId = caseId;
+    setProofLoading(true);
+
+    async function loadProof() {
+      try {
+        const [healthResult, evidenceResult] = await Promise.all([
+          api("/healthz"),
+          api(`/v1/cases/${targetCaseId}/evidence`),
+        ]);
+        if (!ignore && activeCaseIdRef.current === targetCaseId) {
+          setHealth(healthResult);
+          setEvidence(evidenceResult);
+        }
+      } catch (err) {
+        if (!ignore && activeCaseIdRef.current === targetCaseId) setError(cleanError(err));
+      } finally {
+        if (!ignore && activeCaseIdRef.current === targetCaseId) setProofLoading(false);
+      }
+    }
+
+    loadProof();
+    return () => {
+      ignore = true;
+    };
+  }, [caseId, view]);
 
   async function addNote(event) {
     event.preventDefault();
@@ -241,7 +351,7 @@ function App() {
     <div className="app">
       <header className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">{caseData?.team || "Home care handoff"}</span>
+          <span className="eyebrow">{displayedTeam}</span>
           <h1>{activeScreen.title}</h1>
           <p>{activeScreen.body}</p>
         </div>
@@ -250,7 +360,7 @@ function App() {
           <div className="case-switcher">
             <label>
               Care recipient
-              <select value={caseId} onChange={(event) => setCaseId(event.target.value)}>
+              <select value={caseId} onChange={(event) => changeCase(event.target.value)}>
                 {cases.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}
@@ -269,14 +379,14 @@ function App() {
             <div className="memory-summary role-entry-summary" aria-label="Current workspace">
               <span>Current workspace</span>
               <strong>{activeScreen.label}</strong>
-              <small>{currentCase?.name || caseData?.name || "Care recipient"}</small>
+              <small>{caseLoading ? `Loading ${displayedCaseName}...` : displayedCaseName}</small>
             </div>
           ) : (
             <div className="memory-summary" aria-label="Current memory summary">
               <span>Demo case context</span>
-              <strong>{currentCase?.memory_count || memories.length} notes</strong>
+              <strong>{caseLoading ? "Loading..." : `${memories.length} notes`}</strong>
               <small>
-                {importantCount} priority · {reviewCount} needs review
+                {importantCount} priority - {reviewCount} needs review
               </small>
             </div>
           )}
@@ -308,8 +418,9 @@ function App() {
         <section className="stage">
           {view === "handoff" && (
             <HandoffScreen
-              busy={busy}
-              name={caseData?.name || "Avery"}
+              busy={busy || caseLoading}
+              loading={caseLoading}
+              name={displayedCaseName}
               handoff={handoff}
               sources={handoffSources}
               question={question}
@@ -323,7 +434,8 @@ function App() {
           )}
           {view === "notes" && (
             <NotesScreen
-              busy={busy}
+              busy={busy || caseLoading}
+              loading={caseLoading}
               memories={memories}
               noteText={noteText}
               noteType={noteType}
@@ -334,7 +446,8 @@ function App() {
           )}
           {view === "review" && (
             <ReviewScreen
-              busy={busy}
+              busy={busy || caseLoading}
+              loading={caseLoading}
               memories={memories}
               feedback={feedback}
               setFeedback={setFeedback}
@@ -342,7 +455,7 @@ function App() {
               onForget={forget}
             />
           )}
-          {view === "proof" && <ProofScreen evidence={evidence} health={health} />}
+          {view === "proof" && <ProofScreen evidence={evidence} health={health} loading={proofLoading} />}
         </section>
       </main>
     </div>
@@ -351,6 +464,7 @@ function App() {
 
 function HandoffScreen({
   busy,
+  loading,
   name,
   handoff,
   sources,
@@ -378,7 +492,13 @@ function HandoffScreen({
 
       <div className="morning-grid">
         <section className="handoff-area">
-          {!handoff ? (
+          {loading ? (
+            <div className="empty-state">
+              <ClipboardList size={38} />
+              <h3>Loading {name}</h3>
+              <p>Getting the latest saved notes for this care recipient.</p>
+            </div>
+          ) : !handoff ? (
             <div className="empty-state">
               <ClipboardList size={38} />
               <h3>No handoff generated yet</h3>
@@ -436,7 +556,7 @@ function HandoffScreen({
   );
 }
 
-function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteType, onSubmit }) {
+function NotesScreen({ busy, loading, memories, noteText, noteType, setNoteText, setNoteType, onSubmit }) {
   const nightNotes = memories.filter((memory) => memory.source?.toLowerCase().includes("night"));
 
   return (
@@ -473,7 +593,13 @@ function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteT
       <div className="timeline timeline-panel">
         <span className="eyebrow">Saved from this shift</span>
         <h2>Night notes ready for morning</h2>
-        {nightNotes.length ? (
+        {loading ? (
+          <div className="empty-state compact">
+            <Moon size={28} />
+            <h3>Loading notes</h3>
+            <p>Getting the latest shift notes for this care recipient.</p>
+          </div>
+        ) : nightNotes.length ? (
           nightNotes.map((memory) => (
             <article key={memory.id} className="timeline-item">
               <span className={memory.important ? "timeline-pin important" : "timeline-pin"} />
@@ -496,7 +622,7 @@ function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteT
   );
 }
 
-function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForget }) {
+function ReviewScreen({ busy, loading, memories, feedback, setFeedback, onImprove, onForget }) {
   return (
     <div className="screen-layout">
       <div className="action-strip">
@@ -516,7 +642,13 @@ function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForg
       </div>
 
       <div className="review-list">
-        {memories.map((memory) => (
+        {loading ? (
+          <div className="empty-state compact">
+            <BadgeCheck size={28} />
+            <h3>Loading review queue</h3>
+            <p>Getting the latest notes for this care recipient.</p>
+          </div>
+        ) : memories.map((memory) => (
           <article key={memory.id} className={memory.important ? "review-item important" : "review-item"}>
             <div>
               <span className="type-chip">{labelForType(memory.type)}</span>
@@ -541,7 +673,7 @@ function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForg
   );
 }
 
-function ProofScreen({ evidence, health }) {
+function ProofScreen({ evidence, health, loading }) {
   const backend = evidence?.backend || health?.memory;
   const intelligence = evidence?.intelligence || health?.intelligence;
   const communicationTimeline = evidence?.communication_timeline || [];
@@ -579,7 +711,9 @@ function ProofScreen({ evidence, health }) {
           <h3>Communication trace</h3>
           <p>API keys are redacted. Requests, datasets, queries, status codes, and response previews stay visible.</p>
         </div>
-        {communicationTimeline.length ? (
+        {loading ? (
+          <div className="local-call-note">Loading the latest proof trace for this care recipient.</div>
+        ) : communicationTimeline.length ? (
           communicationTimeline.map((event) => (
             <article className="communication-event" key={event.trace_id}>
               <div className="event-topline">
