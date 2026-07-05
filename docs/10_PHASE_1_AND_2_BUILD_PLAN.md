@@ -27,9 +27,9 @@ Acceptance checks:
 - Forget a note and confirm it disappears from handoff.
 - View proof screen showing remember, recall, improve, forget.
 
-## Phase 2: Cognee-Backed MVP
+## Phase 2: Cognee and Gemini MVP
 
-Goal: replace local memory with Cognee Cloud while keeping the same product UX.
+Goal: replace local memory and local handoff writing with Cognee Cloud plus Gemini while keeping the same product UX.
 
 Deliverables:
 
@@ -39,14 +39,19 @@ Deliverables:
 - `recall` calls for handoff generation and Q&A.
 - `improve` calls from feedback and marked-important actions.
 - `forget` calls for deletion and retention.
+- Gemini note understanding before memory write.
+- Gemini recall planning before Cognee recall.
+- Gemini handoff writing from only verified Cognee-returned sources.
 - Judge trace showing Cognee operation IDs, source IDs, and latency.
-- Optional LLM provider for more natural handoff writing.
+- Backend verifier that rejects unsourced generated claims.
 
 Acceptance checks:
 
 - Browser never receives Cognee API key.
+- Browser never receives Gemini API key.
 - Case memory persists across backend restart.
 - Cognee trace confirms remember, recall, improve, forget.
+- Proof screen shows active memory and reasoning layers.
 - Deleted memory no longer appears in recall.
 - Case A cannot recall Case B memory.
 - Handoff output cites source IDs.
@@ -74,4 +79,4 @@ For the hackathon demo, use two synthetic cases and roughly 8-12 notes total. Th
 
 ## Current Boundary
 
-Phase 1 is complete enough to prove the product workflow locally. Phase 2 is activated by setting `MEMORY_BACKEND=cognee`, `COGNEE_BASE_URL`, and `COGNEE_API_KEY`; that is the final hackathon proof path.
+Phase 1 remains as the local smoke-test path. Phase 2 is activated by setting `MEMORY_BACKEND=cognee`, `COGNEE_BASE_URL`, `COGNEE_API_KEY`, `LLM_PROVIDER=gemini`, and `GEMINI_API_KEY`; that is the final hackathon proof path.

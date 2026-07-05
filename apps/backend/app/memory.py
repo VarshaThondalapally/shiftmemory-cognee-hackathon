@@ -22,7 +22,9 @@ GENERIC_FEEDBACK_TEXTS = {
 
 
 class MemoryBackendError(RuntimeError):
-    pass
+    def __init__(self, message: str, communication: dict[str, Any] | None = None) -> None:
+        super().__init__(message)
+        self.communication = communication
 
 
 def now_iso() -> str:
@@ -31,6 +33,10 @@ def now_iso() -> str:
 
 def truthy(value: str | None) -> bool:
     return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def normalize_text(value: str) -> str:
+    return re.sub(r"\s+", " ", value.lower()).strip()
 
 
 def seed_state() -> dict[str, Any]:
@@ -186,11 +192,18 @@ class LocalMemoryService:
             "memories": memories,
         }
 
-    def remember(self, case_id: str, memory_type: str, text: str, source: str) -> MemoryResult:
+    def remember(
+        self,
+        case_id: str,
+        memory_type: str,
+        text: str,
+        source: str,
+        understanding: dict[str, Any] | None = None,
+    ) -> MemoryResult:
         start = time.perf_counter()
         state = self._load()
         case = self._case_from_state(state, case_id)
-        item = self._new_item(memory_type, text, source)
+        item = self._new_item(memory_type, text, source, understanding)
         case["memories"].append(item)
         trace = self._trace(
             "remember",
@@ -199,6 +212,7 @@ class LocalMemoryService:
             time.perf_counter() - start,
             {
                 "source": source,
+                "understanding": understanding,
                 "proof": "A worker added a note that future handoffs can retrieve.",
             },
         )
@@ -206,11 +220,18 @@ class LocalMemoryService:
         self._save(state)
         return MemoryResult(item=item, trace=trace)
 
-    def recall(self, case_id: str, query: str, limit: int = 8) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    def recall(
+        self,
+        case_id: str,
+        query: str,
+        limit: int = 8,
+        search_type: str | None = None,
+        intent: dict[str, Any] | None = None,
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         start = time.perf_counter()
         state = self._load()
         case = self._case_from_state(state, case_id)
-        recalled = self._rank(self._visible_memories(case["memories"]), query)[:limit]
+        recalled = self._rank(self._visible_memories(case["memories"]), query, intent)[:limit]
         trace = self._trace(
             "recall",
             case_id,
@@ -218,8 +239,10 @@ class LocalMemoryService:
             time.perf_counter() - start,
             {
                 "query": query,
+                "intent": intent,
                 "proof": "The handoff or answer was built from stored case notes.",
-                "strategy": "local deterministic ranking; Cognee adapter uses Cloud recall when configured",
+                "strategy": "local structured fallback; Cognee adapter uses Cloud recall when configured",
+                "requested_search_type": search_type,
             },
         )
         case["traces"].append(trace)
@@ -329,12 +352,41 @@ class LocalMemoryService:
                 "Do not spend Cognee balance on page refresh, UI navigation, or repeated polling.",
                 "Use two small demo cases so judges see the full lifecycle without burning credits.",
             ],
+            "communication_timeline": self._communication_timeline(traces),
             "recent_traces": list(reversed(traces[-12:])),
         }
 
-    def _rank(self, memories: list[dict[str, Any]], query: str) -> list[dict[str, Any]]:
+    def _communication_timeline(self, traces: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        timeline = []
+        for trace in reversed(traces[-24:]):
+            metadata = trace.get("metadata", {})
+            calls = metadata.get("cognee_calls") or []
+            if metadata.get("cognee_call"):
+                calls = [metadata["cognee_call"], *calls]
+            timeline.append(
+                {
+                    "trace_id": trace["id"],
+                    "operation": trace["operation"],
+                    "created_at": trace["created_at"],
+                    "backend": trace["backend"],
+                    "latency_ms": trace["latency_ms"],
+                    "memory_ids": trace["memory_ids"],
+                    "proof": metadata.get("proof"),
+                    "query": metadata.get("query"),
+                    "calls": calls,
+                }
+            )
+        return timeline
+
+    def _rank(
+        self,
+        memories: list[dict[str, Any]],
+        query: str,
+        intent: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         query_lower = query.lower()
         terms = {part.lower() for part in re.split(r"[^a-zA-Z0-9]+", query) if len(part) > 2}
+        bucket = (intent or {}).get("bucket")
         type_priority = {
             "family": 5,
             "risk": 4,
@@ -349,8 +401,9 @@ class LocalMemoryService:
             term_hits = sum(1 for term in terms if term in text)
             importance = 4 if item.get("important") else 0
             type_hit = 3 if item["type"] in query_lower else 0
+            bucket_hit = 6 if bucket and item.get("understanding", {}).get("handoff_bucket") == bucket else 0
             priority = type_priority.get(item["type"], 0)
-            return (term_hits + importance + type_hit + priority, item["created_at"])
+            return (term_hits + importance + type_hit + bucket_hit + priority, item["created_at"])
 
         return sorted(memories, key=score, reverse=True)
 
@@ -360,8 +413,14 @@ class LocalMemoryService:
     def _is_generic_feedback(self, text: str) -> bool:
         return text.strip().lower() in GENERIC_FEEDBACK_TEXTS
 
-    def _new_item(self, memory_type: str, text: str, source: str) -> dict[str, Any]:
-        return {
+    def _new_item(
+        self,
+        memory_type: str,
+        text: str,
+        source: str,
+        understanding: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        item = {
             "id": f"mem-{uuid4().hex[:12]}",
             "type": memory_type,
             "text": text.strip(),
@@ -369,6 +428,9 @@ class LocalMemoryService:
             "source": source,
             "important": False,
         }
+        if understanding:
+            item["understanding"] = understanding
+        return item
 
     def _trace(
         self,
@@ -436,14 +498,33 @@ class CogneeMemoryService(LocalMemoryService):
             "message": "Cognee Cloud is the memory layer. Local JSON is only the product workflow cache.",
         }
 
-    def remember(self, case_id: str, memory_type: str, text: str, source: str) -> MemoryResult:
+    def remember(
+        self,
+        case_id: str,
+        memory_type: str,
+        text: str,
+        source: str,
+        understanding: dict[str, Any] | None = None,
+    ) -> MemoryResult:
         start = time.perf_counter()
         state = self._load()
         case = self._case_from_state(state, case_id)
-        item = self._new_item(memory_type, text, source)
+        item = self._new_item(memory_type, text, source, understanding)
         dataset = self._dataset_for_memory(case_id, item["id"])
         item["cognee_dataset"] = dataset
-        remote = self._remember_remote(case, item, dataset)
+        try:
+            remote = self._remember_remote(case, item, dataset)
+        except MemoryBackendError as exc:
+            self._record_cognee_failure(
+                state,
+                case,
+                "remember_failed",
+                [item["id"]],
+                start,
+                exc,
+                "Cognee remember failed before the note was accepted as durable memory.",
+            )
+            raise
         case["memories"].append(item)
         trace = self._trace(
             "remember",
@@ -453,7 +534,9 @@ class CogneeMemoryService(LocalMemoryService):
             {
                 "source": source,
                 "cognee_dataset": dataset,
-                "cognee_response": remote,
+                "cognee_response": remote.get("response"),
+                "cognee_calls": [remote],
+                "understanding": understanding,
                 "proof": "The note was sent to Cognee Cloud as durable memory.",
             },
         )
@@ -461,14 +544,33 @@ class CogneeMemoryService(LocalMemoryService):
         self._save(state)
         return MemoryResult(item=item, trace=trace)
 
-    def recall(self, case_id: str, query: str, limit: int = 8) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    def recall(
+        self,
+        case_id: str,
+        query: str,
+        limit: int = 8,
+        search_type: str | None = None,
+        intent: dict[str, Any] | None = None,
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         start = time.perf_counter()
         state = self._load()
         case = self._case_from_state(state, case_id)
         visible_memories = self._visible_memories(case["memories"])
         datasets = [item.get("cognee_dataset") or self._dataset_for_memory(case_id, item["id"]) for item in visible_memories]
-        remote = self._recall_remote(query, datasets, limit)
-        recalled = self._rank(visible_memories, query)[:limit]
+        try:
+            remote = self._recall_remote(query, datasets, limit, search_type)
+        except MemoryBackendError as exc:
+            self._record_cognee_failure(
+                state,
+                case,
+                "recall_failed",
+                [],
+                start,
+                exc,
+                "Cognee recall failed before a verified handoff could be built.",
+            )
+            raise
+        recalled = self._recall_from_cognee_response(remote, visible_memories, query, limit, intent)
         trace = self._trace(
             "recall",
             case_id,
@@ -476,8 +578,12 @@ class CogneeMemoryService(LocalMemoryService):
             time.perf_counter() - start,
             {
                 "query": query,
+                "intent": intent,
                 "cognee_datasets": datasets,
-                "cognee_response": remote,
+                "cognee_response": remote.get("response"),
+                "cognee_calls": [remote],
+                "requested_search_type": search_type,
+                "verified_source_ids": [item["id"] for item in recalled],
                 "proof": "Cognee Cloud was queried for case-scoped memory before building the output.",
             },
         )
@@ -508,13 +614,41 @@ class CogneeMemoryService(LocalMemoryService):
             feedback_item["important"] = True
             feedback_dataset = self._dataset_for_memory(case_id, feedback_item["id"])
             feedback_item["cognee_dataset"] = feedback_dataset
-            remote_remember = self._remember_remote(case, feedback_item, feedback_dataset)
+            try:
+                remote_remember = self._remember_remote(case, feedback_item, feedback_dataset)
+            except MemoryBackendError as exc:
+                self._record_cognee_failure(
+                    state,
+                    case,
+                    "improve_failed",
+                    touched,
+                    start,
+                    exc,
+                    "Cognee remember failed while storing reviewer feedback.",
+                )
+                raise
             case["memories"].append(feedback_item)
             touched.append(feedback_item["id"])
             target_datasets.append(feedback_dataset)
 
         improve_text = feedback_text or "Supervisor marked this note important."
-        remote_improve = self._improve_remote(target_datasets, improve_text) if target_datasets else {"status": "skipped"}
+        try:
+            remote_improve = self._improve_remote(target_datasets, improve_text) if target_datasets else {"calls": []}
+        except MemoryBackendError as exc:
+            self._record_cognee_failure(
+                state,
+                case,
+                "improve_failed",
+                touched,
+                start,
+                exc,
+                "Cognee improve failed before reviewer priority could be stored in memory.",
+            )
+            raise
+        cognee_calls = []
+        if remote_remember:
+            cognee_calls.append(remote_remember)
+        cognee_calls.extend(remote_improve.get("calls", []))
 
         trace = self._trace(
             "improve",
@@ -524,8 +658,9 @@ class CogneeMemoryService(LocalMemoryService):
             {
                 "feedback": feedback_text,
                 "cognee_datasets": target_datasets,
-                "cognee_remember_response": remote_remember,
-                "cognee_improve_response": remote_improve,
+                "cognee_remember_response": remote_remember.get("response") if remote_remember else None,
+                "cognee_improve_response": [call.get("response") for call in remote_improve.get("calls", [])],
+                "cognee_calls": cognee_calls,
                 "proof": "Reviewer priority was sent to Cognee without creating duplicate generic notes.",
             },
         )
@@ -541,7 +676,19 @@ class CogneeMemoryService(LocalMemoryService):
         if not item:
             raise KeyError(memory_id)
         dataset = item.get("cognee_dataset") or self._dataset_for_memory(case_id, memory_id)
-        remote = self._forget_remote(dataset)
+        try:
+            remote = self._forget_remote(dataset)
+        except MemoryBackendError as exc:
+            self._record_cognee_failure(
+                state,
+                case,
+                "forget_failed",
+                [memory_id],
+                start,
+                exc,
+                "Cognee forget failed, so the note remains active.",
+            )
+            raise
         case["memories"] = [memory for memory in case["memories"] if memory["id"] != memory_id]
         trace = self._trace(
             "forget",
@@ -551,7 +698,8 @@ class CogneeMemoryService(LocalMemoryService):
             {
                 "reason": "user_removed_note",
                 "cognee_dataset": dataset,
-                "cognee_response": remote,
+                "cognee_response": remote.get("response"),
+                "cognee_calls": [remote],
                 "proof": "The Cognee dataset for this note was removed before the app stopped using it.",
             },
         )
@@ -565,7 +713,7 @@ class CogneeMemoryService(LocalMemoryService):
             for item in case["memories"]:
                 dataset = self._dataset_for_memory(case["id"], item["id"])
                 item["cognee_dataset"] = dataset
-                self._remember_remote(case, item, dataset)
+                remote = self._remember_remote(case, item, dataset)
                 trace = self._trace(
                     "remember",
                     case["id"],
@@ -574,6 +722,8 @@ class CogneeMemoryService(LocalMemoryService):
                     {
                         "source": item["source"],
                         "cognee_dataset": dataset,
+                        "cognee_response": remote.get("response"),
+                        "cognee_calls": [remote],
                         "proof": "Seed note was written to Cognee for the live demo reset.",
                     },
                 )
@@ -592,6 +742,7 @@ class CogneeMemoryService(LocalMemoryService):
                 "source": item["source"],
                 "important": item.get("important", False),
                 "created_at": item["created_at"],
+                "understanding": item.get("understanding"),
             },
             indent=2,
         )
@@ -606,26 +757,87 @@ class CogneeMemoryService(LocalMemoryService):
             files=[("data", (f"{item['id']}.json", document, "application/json"))],
         )
 
-    def _recall_remote(self, query: str, datasets: list[str], limit: int) -> dict[str, Any]:
+    def _recall_remote(
+        self,
+        query: str,
+        datasets: list[str],
+        limit: int,
+        search_type: str | None = None,
+    ) -> dict[str, Any]:
         if not datasets:
-            return {"status": "skipped", "reason": "no_active_datasets"}
+            return {
+                "provider": "cognee",
+                "direction": "backend_to_memory",
+                "method": "POST",
+                "endpoint": "/api/v1/recall",
+                "status": "skipped",
+                "reason": "no_active_datasets",
+                "request": {
+                    "json": {
+                        "searchType": search_type,
+                        "datasets": [],
+                        "query": query,
+                        "topK": limit,
+                        "onlyContext": True,
+                        "includeReferences": True,
+                        "scope": "auto",
+                    }
+                },
+                "response": None,
+            }
         return self._post_json(
             "/api/v1/recall",
             {
-                "searchType": None,
+                "searchType": search_type,
                 "datasets": datasets,
                 "query": query,
+                "systemPrompt": "Return source-grounded context. Preserve any memory_id fields from the stored JSON.",
                 "topK": limit,
                 "onlyContext": True,
+                "verbose": False,
                 "includeReferences": True,
                 "scope": "auto",
+                "contextProfile": "agent",
             },
         )
 
+    def _recall_from_cognee_response(
+        self,
+        remote: dict[str, Any],
+        visible_memories: list[dict[str, Any]],
+        query: str,
+        limit: int,
+        intent: dict[str, Any] | None,
+    ) -> list[dict[str, Any]]:
+        body = remote.get("response", {}).get("body")
+        ordered_ids = self._extract_memory_ids(body, visible_memories)
+        memories_by_id = {item["id"]: item for item in visible_memories}
+        recalled = [memories_by_id[memory_id] for memory_id in ordered_ids if memory_id in memories_by_id]
+        if recalled:
+            return recalled[:limit]
+        if truthy(os.getenv("COGNEE_ALLOW_LOCAL_RANK_FALLBACK", "false")):
+            return self._rank(visible_memories, query, intent)[:limit]
+        return []
+
+    def _extract_memory_ids(self, value: Any, visible_memories: list[dict[str, Any]]) -> list[str]:
+        text = json.dumps(value, default=str).lower()
+        known_ids = [item["id"] for item in visible_memories]
+        found: list[str] = []
+        for memory_id in known_ids:
+            if memory_id.lower() in text:
+                found.append(memory_id)
+        for item in visible_memories:
+            if item["id"] in found:
+                continue
+            normalized = normalize_text(item["text"])
+            if len(normalized) >= 32 and normalized[:80] in normalize_text(text):
+                found.append(item["id"])
+        return found
+
     def _improve_remote(self, datasets: list[str], feedback: str) -> dict[str, Any]:
-        responses = []
+        calls = []
         for dataset in datasets:
-            responses.append(
+            calls.append(
                 self._post_json(
                     "/api/v1/improve",
                     {
@@ -636,13 +848,33 @@ class CogneeMemoryService(LocalMemoryService):
                     },
                 )
             )
-        return {"responses": responses}
+        return {"calls": calls}
 
     def _forget_remote(self, dataset: str) -> dict[str, Any]:
         return self._post_json(
             "/api/v1/forget",
             {"dataset": dataset, "everything": False, "memoryOnly": False},
         )
+
+    def _record_cognee_failure(
+        self,
+        state: dict[str, Any],
+        case: dict[str, Any],
+        operation: str,
+        memory_ids: list[str],
+        start: float,
+        exc: MemoryBackendError,
+        proof: str,
+    ) -> None:
+        metadata: dict[str, Any] = {
+            "proof": proof,
+            "error": str(exc),
+        }
+        if exc.communication:
+            metadata["cognee_calls"] = [exc.communication]
+        trace = self._trace(operation, case["id"], memory_ids, time.perf_counter() - start, metadata)
+        case["traces"].append(trace)
+        self._save(state)
 
     def _post_json(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", path, json=payload)
@@ -661,17 +893,70 @@ class CogneeMemoryService(LocalMemoryService):
             "Authorization": f"Bearer {self.api_key}",
             "X-Api-Key": self.api_key,
         }
+        start = time.perf_counter()
+        call: dict[str, Any] = {
+            "provider": "cognee",
+            "direction": "backend_to_memory",
+            "method": method,
+            "endpoint": path,
+            "auth": {
+                "authorization": "redacted",
+                "x_api_key": "redacted",
+            },
+            "request": self._sanitize_request(kwargs),
+        }
         try:
             with httpx.Client(timeout=self.timeout) as client:
                 response = client.request(method, url, headers=headers, **kwargs)
+                call["latency_ms"] = round((time.perf_counter() - start) * 1000, 2)
+                call["response"] = {
+                    "status_code": response.status_code,
+                    "ok": response.is_success,
+                    "body": self._response_body(response),
+                }
+                call["status"] = "ok" if response.is_success else "error"
                 response.raise_for_status()
-                if response.content:
-                    return {"status": "ok", "body": self._compact(response.json())}
-                return {"status": "ok", "body": None}
+                return call
         except Exception as exc:
+            call["latency_ms"] = call.get("latency_ms") or round((time.perf_counter() - start) * 1000, 2)
+            call["status"] = "error"
+            call["error"] = str(exc)
             if self.strict:
-                raise MemoryBackendError(f"Cognee call failed: {exc}") from exc
-            return {"status": "error", "error": str(exc)}
+                raise MemoryBackendError(f"Cognee call failed: {exc}", communication=call) from exc
+            return call
+
+    def _sanitize_request(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        request: dict[str, Any] = {}
+        if "json" in kwargs:
+            request["json"] = self._compact(kwargs["json"])
+        if "data" in kwargs:
+            request["form"] = self._compact(kwargs["data"])
+        if "files" in kwargs:
+            request["files"] = [self._sanitize_file(field, file_info) for field, file_info in kwargs["files"]]
+        return request
+
+    def _sanitize_file(self, field: str, file_info: tuple[str, str, str]) -> dict[str, Any]:
+        filename, content, content_type = file_info
+        return {
+            "field": field,
+            "filename": filename,
+            "content_type": content_type,
+            "content": self._compact(self._maybe_json(content)),
+        }
+
+    def _response_body(self, response: httpx.Response) -> Any:
+        if not response.content:
+            return None
+        try:
+            return self._compact(response.json())
+        except ValueError:
+            return self._compact(response.text)
+
+    def _maybe_json(self, value: str) -> Any:
+        try:
+            return json.loads(value)
+        except ValueError:
+            return value
 
     def _compact(self, value: Any) -> Any:
         text = json.dumps(value, default=str)

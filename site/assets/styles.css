@@ -367,6 +367,23 @@ h3 {
   border-top: 1px solid var(--line);
 }
 
+pre.operation-list {
+  margin: 0;
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+pre.operation-list code {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+}
+
 .operation-list div {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 120px;

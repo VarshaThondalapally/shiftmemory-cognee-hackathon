@@ -463,17 +463,23 @@ function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForg
 
 function ProofScreen({ evidence, health }) {
   const backend = evidence?.backend || health?.memory;
+  const intelligence = evidence?.intelligence || health?.intelligence;
+  const communicationTimeline = evidence?.communication_timeline || [];
   return (
     <div className="screen-layout">
       <div className="action-strip">
         <div>
           <span className="eyebrow">Judge proof</span>
           <h2>Memory lifecycle evidence</h2>
-          <p>Normal users never need this screen. It exists to prove what the memory layer did.</p>
+          <p>Normal users never need this screen. It shows the exact redacted exchange between this backend and memory.</p>
         </div>
         <div className="backend-badge">
           <strong>{backend?.name || "loading"}</strong>
           <span>{backend?.phase || "memory layer"}</span>
+        </div>
+        <div className="backend-badge">
+          <strong>{intelligence?.name || "loading"}</strong>
+          <span>{intelligence?.model || "reasoning layer"}</span>
         </div>
       </div>
 
@@ -486,6 +492,54 @@ function ProofScreen({ evidence, health }) {
           </article>
         ))}
       </div>
+
+      <section className="communication-log">
+        <div className="section-title">
+          <span className="eyebrow">Backend to memory</span>
+          <h3>Communication trace</h3>
+          <p>API keys are redacted. Requests, datasets, queries, status codes, and response previews stay visible.</p>
+        </div>
+        {communicationTimeline.length ? (
+          communicationTimeline.map((event) => (
+            <article className="communication-event" key={event.trace_id}>
+              <div className="event-topline">
+                <strong>{event.operation}</strong>
+                <span>{event.memory_ids?.join(", ") || "no memory id"}</span>
+                <small>{event.latency_ms} ms</small>
+              </div>
+              {event.proof && <p className="event-proof">{event.proof}</p>}
+              {event.calls?.length ? (
+                event.calls.map((call, index) => (
+                  <div className="call-card" key={`${event.trace_id}-${index}`}>
+                    <div className="call-topline">
+                      <strong>
+                        {call.method} {call.endpoint}
+                      </strong>
+                      <span className={call.status === "ok" ? "call-status ok" : "call-status"}>
+                        {call.status || "unknown"}
+                      </span>
+                    </div>
+                    <div className="call-grid">
+                      <div>
+                        <span className="mini-label">Request</span>
+                        <pre>{formatJson(call.request || { reason: call.reason })}</pre>
+                      </div>
+                      <div>
+                        <span className="mini-label">Response</span>
+                        <pre>{formatJson(call.response || { status: call.status, reason: call.reason, error: call.error })}</pre>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="local-call-note">No Cognee HTTP call was captured for this trace. Local demo memory is active.</div>
+              )}
+            </article>
+          ))
+        ) : (
+          <div className="local-call-note">Run remember, handoff, review, or remove once to create memory traces.</div>
+        )}
+      </section>
 
       <section className="trace-table">
         <div className="trace-head">
@@ -510,6 +564,11 @@ function ProofScreen({ evidence, health }) {
       </section>
     </div>
   );
+}
+
+function formatJson(value) {
+  if (value === undefined || value === null) return "none";
+  return JSON.stringify(value, null, 2);
 }
 
 function HandoffColumn({ title, items, accent }) {

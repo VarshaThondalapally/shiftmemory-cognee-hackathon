@@ -34,31 +34,33 @@ flowchart LR
 
 ## Memory Scopes
 
-Use case-scoped datasets for MVP simplicity and judge clarity.
+Use one Cognee dataset per remembered item for the hackathon MVP, grouped by a case prefix.
+
+This is intentionally simple for judge clarity: when a note is forgotten, the app can call Cognee forget for that note's dataset and prove the note stops participating in future recall.
 
 Dataset naming:
 
 ```text
-shiftmemory:{environment}:org:{org_id}:case:{case_id}
+handoff-demo-{case_id}-{memory_id}
 ```
 
 Examples:
 
 ```text
-shiftmemory:demo:org:demo-care:case:resident-avery
-shiftmemory:prod:org:acme-homecare:case:case-01849
+handoff-demo-resident-avery-mem-family-9am
+handoff-demo-resident-avery-mem-oatmeal-breakfast
 ```
 
 Rationale:
 
-- Makes case isolation easy to prove.
-- Makes `forget(dataset=...)` clear for case deletion.
-- Reduces accidental cross-case recall risk.
+- Makes item-level forget easy to prove during judging.
+- Keeps case isolation clear because every dataset name includes the case ID.
+- Keeps the proof screen understandable because every Cognee call shows the exact dataset it touched.
 - Makes memory traces understandable in the demo.
 
 Future option:
 
-- One dataset per org with strong metadata filters can reduce dataset sprawl, but it creates more risk for an early MVP. We should not start there.
+- One dataset per case or org with strong metadata filters can reduce dataset sprawl, but it creates more risk for a short hackathon MVP. We should migrate there after the demo once item-level deletion semantics are verified.
 
 ## Memory Metadata
 

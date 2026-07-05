@@ -14,13 +14,14 @@ Primary memory:
 
 Primary LLM:
 
-- Configurable provider adapter.
-- Start with Gemini or OpenAI based on available keys and latency.
+- Gemini through the backend provider adapter for the hackathon submission.
+- Local deterministic fallback only for development and smoke tests.
 
 Reason:
 
 - The hackathon rewards Cognee use, not a specific LLM.
-- Provider abstraction prevents the product from becoming dependent on one model.
+- Gemini is used as the reasoning layer for note understanding, recall planning, and source-grounded handoff writing.
+- The provider adapter keeps the product from becoming permanently dependent on one model.
 - Cognee remains the durable differentiator.
 
 ## Agent Types

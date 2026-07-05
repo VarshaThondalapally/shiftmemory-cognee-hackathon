@@ -86,9 +86,14 @@ def main() -> None:
 
     evidence = client.get("/v1/cases/resident-avery/evidence")
     assert evidence.status_code == 200, evidence.text
-    counts = evidence.json()["operation_counts"]
+    evidence_payload = evidence.json()
+    counts = evidence_payload["operation_counts"]
     for operation in ("remember", "recall", "improve", "forget"):
         assert counts.get(operation, 0) >= 1, f"missing {operation}: {counts}"
+    assert evidence_payload["intelligence"]["name"], evidence_payload
+    timeline = evidence_payload["communication_timeline"]
+    assert any(item["operation"] == "recall" for item in timeline), timeline
+    assert all("calls" in item for item in timeline), timeline
 
     print("PASS: handoff memory demo lifecycle works end to end")
 

@@ -16,6 +16,16 @@ That is the hackathon use case: a memory-backed handoff assistant for teams wher
 - Remove a wrong note and confirm it no longer appears.
 - Open the proof screen to show the memory lifecycle.
 
+## Final Submission Architecture
+
+The submitted product uses three separate responsibilities:
+
+- Gemini is the reasoning layer. It understands raw notes, creates the recall plan, and writes the final handoff.
+- Cognee is the memory layer. It stores remembered notes and retrieves the relevant context later.
+- The FastAPI backend is the verifier. It owns keys, case boundaries, source checks, audit traces, and failure handling.
+
+The browser never receives Cognee or LLM keys. The frontend talks only to the FastAPI backend.
+
 ## How Cognee Is Used
 
 Cognee is the backend memory layer, not an end-user feature.
@@ -25,7 +35,7 @@ Cognee is the backend memory layer, not an end-user feature.
 - `improve`: reviewer feedback is written back so future outputs prioritize better context.
 - `forget`: removed notes are deleted from future recall.
 
-The browser never receives Cognee or LLM keys. The frontend talks only to the FastAPI backend.
+For final mode, the backend only uses Cognee recall results that can be mapped back to stored source notes. If Cognee returns no verifiable source, the handoff says no verified memory was found instead of inventing a note.
 
 ## Run Locally
 
@@ -58,21 +68,35 @@ Shortcut after dependencies are installed:
 .\scripts\dev.ps1
 ```
 
-## Use Cognee Cloud
+## Final Hackathon Mode
 
-Use local mode while designing the UI. Use Cognee mode for the final hackathon proof run.
+Use local mode while designing the UI. Use Cognee plus Gemini mode for the final hackathon proof run.
 
 Backend-only `.env`:
 
 ```text
 MEMORY_BACKEND=cognee
-COGNEE_BASE_URL=https://your-tenant.aws.cognee.ai
+COGNEE_BASE_URL=https://api.cognee.ai
 COGNEE_API_KEY=your_key
 COGNEE_STRICT=true
 COGNEE_DATASET_PREFIX=handoff-demo
+COGNEE_ALLOW_LOCAL_RANK_FALLBACK=false
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_key
+GEMINI_MODEL=gemini-1.5-flash
+LLM_STRICT=true
 ```
 
 Use the hackathon Cognee balance only for lifecycle actions: add note, generate handoff, ask question, prioritize, remove, and demo reset. Do not spend it on page refreshes or UI navigation.
+
+## What The Proof Screen Shows
+
+- The active memory backend: local fallback or Cognee Cloud.
+- The active reasoning layer: local fallback or Gemini.
+- The recall plan created for the handoff.
+- Redacted backend-to-Cognee requests and responses.
+- Source IDs used in the handoff.
+- Failures, including Cognee API errors, without exposing API keys.
 
 ## Smoke Test
 

@@ -551,6 +551,117 @@ h3 {
   text-transform: uppercase;
 }
 
+.communication-log {
+  display: grid;
+  gap: 14px;
+}
+
+.section-title {
+  display: grid;
+  gap: 6px;
+}
+
+.section-title p,
+.event-proof,
+.local-call-note {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.communication-event {
+  display: grid;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.event-topline,
+.call-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.event-topline strong {
+  color: var(--green);
+  text-transform: capitalize;
+}
+
+.event-topline span,
+.event-topline small {
+  color: var(--muted);
+}
+
+.call-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f9faf7;
+  border: 1px solid var(--line);
+}
+
+.call-topline strong {
+  font-size: 14px;
+}
+
+.call-status {
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: var(--red);
+  background: #fff0ed;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.call-status.ok {
+  color: var(--green);
+  background: #e8f7ef;
+}
+
+.call-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.call-card pre {
+  max-height: 260px;
+  min-height: 110px;
+  margin: 0;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 8px;
+  color: #1d2329;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.local-call-note {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f9faf7;
+  border: 1px dashed #c7cec5;
+}
+
 .trace-table {
   display: grid;
   border: 1px solid var(--line);
@@ -634,7 +745,8 @@ h3 {
   }
 
   .trace-head,
-  .trace-row {
+  .trace-row,
+  .call-grid {
     grid-template-columns: 1fr;
   }
 }

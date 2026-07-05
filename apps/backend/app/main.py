@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+from .intelligence import HANDOFF_BUCKETS, IntelligenceError, make_intelligence_service
 from .memory import MemoryBackendError, make_memory_service
 
 
@@ -14,25 +15,11 @@ load_dotenv()
 
 app = FastAPI(title="Handoff Memory API", version="0.2.0")
 memory = make_memory_service()
+intelligence = make_intelligence_service()
 
-WATCH_TERMS = (
-    "overnight",
-    "3 am",
-    "3am",
-    "woke",
-    "wake",
-    "restless",
-    "settled",
-    "quiet room",
-    "water",
-    "dizzy",
-    "lower than usual",
-    "check again",
-    "after medication",
-)
-
+WATCH_TERMS = ("overnight", "3 am", "3am", "woke", "restless", "settled", "quiet room", "water", "medication")
 PREFERENCE_TERMS = ("breakfast", "oatmeal", "orange juice", "preference", "avoid")
-FAMILY_TERMS = ("family", "mira", "call", "callback", "update")
+FAMILY_TERMS = ("family", "mira", "call", "callback", "update", "before 9")
 
 app.add_middleware(
     CORSMiddleware,
@@ -64,7 +51,7 @@ class FeedbackRequest(BaseModel):
 
 @app.get("/healthz")
 def healthz() -> dict[str, Any]:
-    return {"status": "ok", "memory": memory.backend_status()}
+    return {"status": "ok", "memory": memory.backend_status(), "intelligence": intelligence.status()}
 
 
 @app.get("/v1/cases")
@@ -83,40 +70,66 @@ def get_case(case_id: str) -> dict[str, Any]:
 @app.post("/v1/cases/{case_id}/notes")
 def add_note(case_id: str, payload: NoteCreate) -> dict[str, Any]:
     try:
-        result = memory.remember(case_id, payload.type, payload.text, payload.source)
-        return {"memory": result.item, "trace": result.trace}
+        case = memory.get_case(case_id)
+        understanding = intelligence.analyze_note(case, payload.type, payload.text, payload.source)
+        result = memory.remember(case_id, payload.type, payload.text, payload.source, understanding)
+        return {"memory": result.item, "trace": result.trace, "understanding": understanding}
     except KeyError:
         raise HTTPException(status_code=404, detail="case_not_found")
     except MemoryBackendError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except IntelligenceError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
 
 
 @app.post("/v1/cases/{case_id}/handoff")
 def generate_handoff(case_id: str, payload: HandoffRequest) -> dict[str, Any]:
     try:
-        recalled, trace = memory.recall(case_id, payload.focus)
+        case = memory.get_case(case_id)
+        recall_plan = intelligence.plan_recall(case, payload.focus)
+        evidence_by_bucket, recalled, recall_traces = recall_for_plan(case_id, recall_plan)
+        handoff = intelligence.write_handoff(case, payload.focus, evidence_by_bucket)
+        verified_handoff = verify_handoff(handoff, recalled)
     except KeyError:
         raise HTTPException(status_code=404, detail="case_not_found")
     except MemoryBackendError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+    except IntelligenceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
-    handoff = build_handoff(recalled)
-    return {"handoff": handoff, "sources": recalled, "trace": trace}
+    return {
+        "handoff": verified_handoff,
+        "sources": recalled,
+        "trace": {
+            "recall_plan": recall_plan,
+            "recall_traces": recall_traces,
+            "intelligence": intelligence.status(),
+        },
+    }
 
 
 @app.post("/v1/cases/{case_id}/ask")
 def ask_case(case_id: str, payload: AskRequest) -> dict[str, Any]:
     try:
-        recalled, trace = memory.recall(case_id, payload.question, limit=5)
+        case = memory.get_case(case_id)
+        recalled, trace = memory.recall(
+            case_id,
+            payload.question,
+            limit=8,
+            search_type=None,
+            intent={"bucket": None, "intent": "Answer a worker question from remembered notes."},
+        )
     except KeyError:
         raise HTTPException(status_code=404, detail="case_not_found")
     except MemoryBackendError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+    except IntelligenceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
-    if not recalled:
-        answer = "I do not have enough notes on this case to answer that."
-    else:
-        answer = answer_question(payload.question, recalled)
+    try:
+        answer = intelligence.answer_question(case, payload.question, recalled)
+    except IntelligenceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     return {"answer": answer, "sources": recalled, "trace": trace}
 
 
@@ -153,7 +166,9 @@ def memory_trace(case_id: str) -> dict[str, Any]:
 @app.get("/v1/cases/{case_id}/evidence")
 def memory_evidence(case_id: str) -> dict[str, Any]:
     try:
-        return memory.evidence(case_id)
+        evidence = memory.evidence(case_id)
+        evidence["intelligence"] = intelligence.status()
+        return evidence
     except KeyError:
         raise HTTPException(status_code=404, detail="case_not_found")
 
@@ -166,70 +181,93 @@ def reset_demo() -> dict[str, Any]:
         raise HTTPException(status_code=503, detail=str(exc))
 
 
-def build_handoff(items: list[dict[str, Any]]) -> dict[str, Any]:
-    buckets = {
-        "before_9": [],
-        "watch_today": [],
-        "care_preferences": [],
-        "later_today": [],
-        "review_with_supervisor": [],
-    }
-    for item in items:
-        text = item["text"]
-        source = item["id"]
-        typed = item["type"]
-        text_lower = text.lower()
-        entry = {"text": text, "source_ids": [source], "source": item["source"], "important": item.get("important", False)}
-        if typed == "task":
-            if "before 9" in text_lower or "callback" in text_lower or ("call" in text_lower and "family" in text_lower):
-                buckets["before_9"].append(entry)
-            else:
-                buckets["later_today"].append(entry)
-        elif typed in {"risk", "incident"} or any(term in text_lower for term in WATCH_TERMS):
-            buckets["watch_today"].append(entry)
-        elif typed == "family" or "before 9" in text_lower or any(term in text_lower for term in FAMILY_TERMS):
-            buckets["before_9"].append(entry)
-        elif typed == "preference" or any(term in text_lower for term in PREFERENCE_TERMS):
-            buckets["care_preferences"].append(entry)
-        elif typed == "review":
-            buckets["review_with_supervisor"].append(entry)
-        else:
-            buckets["review_with_supervisor"].append(entry)
-
-    if not buckets["before_9"]:
-        buckets["before_9"].append({"text": "No urgent before-9 item was found.", "source_ids": [], "source": None, "important": False})
-    if not buckets["watch_today"]:
-        buckets["watch_today"].append({"text": "No overnight watch item was found.", "source_ids": [], "source": None, "important": False})
-
-    return {
-        "summary": "Today's handoff was generated from remembered case notes.",
-        "before_9": buckets["before_9"][:3],
-        "watch_today": buckets["watch_today"][:3],
-        "care_preferences": buckets["care_preferences"][:3],
-        "later_today": buckets["later_today"][:3],
-        "review_with_supervisor": buckets["review_with_supervisor"][:3],
-        "safety_note": "This is a workflow handoff draft, not medical advice.",
-    }
+def recall_for_plan(
+    case_id: str,
+    recall_plan: list[dict[str, Any]],
+) -> tuple[dict[str, list[dict[str, Any]]], list[dict[str, Any]], list[dict[str, Any]]]:
+    evidence_by_bucket = {bucket: [] for bucket in HANDOFF_BUCKETS}
+    recalled_by_id: dict[str, dict[str, Any]] = {}
+    recall_traces = []
+    for step in recall_plan:
+        recalled, trace = memory.recall(
+            case_id,
+            step["query"],
+            limit=step.get("top_k", 8),
+            search_type=step.get("search_type"),
+            intent=step,
+        )
+        recall_traces.append(trace)
+        bucket = step.get("bucket")
+        if bucket not in evidence_by_bucket:
+            bucket = "review_with_supervisor"
+        for item in recalled:
+            target_bucket = bucket_for_item(item, bucket)
+            if item["id"] in recalled_by_id:
+                continue
+            recalled_by_id[item["id"]] = item
+            evidence_by_bucket[target_bucket].append(item)
+    return evidence_by_bucket, list(recalled_by_id.values()), recall_traces
 
 
-def answer_question(question: str, items: list[dict[str, Any]]) -> str:
-    lower = question.lower()
-    if "family" in lower or "call" in lower:
-        family = [item for item in items if item["type"] == "family" or contains_any(item["text"], FAMILY_TERMS)]
-        if family:
-            return f"Tell the family this first: {family[0]['text']}"
-    if "breakfast" in lower or "food" in lower or "preference" in lower:
-        preferences = [item for item in items if item["type"] == "preference" or contains_any(item["text"], PREFERENCE_TERMS)]
-        if preferences:
-            return f"Use the latest preference note: {preferences[0]['text']}"
-    if "watch" in lower or "risk" in lower or "worry" in lower:
-        risks = [item for item in items if item["type"] == "risk" or contains_any(item["text"], WATCH_TERMS)]
-        if risks:
-            return f"Watch this today: {risks[0]['text']}"
-    top = items[0]
-    return f"Most relevant note: {top['text']}"
+def bucket_for_item(item: dict[str, Any], fallback: str) -> str:
+    understood = item.get("understanding", {}).get("handoff_bucket")
+    if understood in HANDOFF_BUCKETS:
+        return understood
+    text = item.get("text", "").lower()
+    typed = item.get("type")
+    if typed == "task":
+        if "before 9" in text or "callback" in text or ("call" in text and "family" in text):
+            return "before_9"
+        return "later_today"
+    if typed in {"risk", "incident"} or contains_any(text, WATCH_TERMS):
+        return "watch_today"
+    if typed == "family" or contains_any(text, FAMILY_TERMS):
+        return "before_9"
+    if typed == "preference" or contains_any(text, PREFERENCE_TERMS):
+        return "care_preferences"
+    if typed == "review":
+        return "review_with_supervisor"
+    return fallback if fallback in HANDOFF_BUCKETS else "review_with_supervisor"
 
 
 def contains_any(text: str, terms: tuple[str, ...]) -> bool:
-    lower = text.lower()
-    return any(term in lower for term in terms)
+    return any(term in text for term in terms)
+
+
+def verify_handoff(handoff: dict[str, Any], sources: list[dict[str, Any]]) -> dict[str, Any]:
+    source_by_id = {item["id"]: item for item in sources}
+    verified = {
+        "summary": str(handoff.get("summary") or "Morning handoff generated from verified remembered notes."),
+        "safety_note": "This is a workflow handoff draft from remembered notes, not medical advice.",
+        "writer": handoff.get("writer") or intelligence.status()["name"],
+    }
+    for bucket in HANDOFF_BUCKETS:
+        verified_items = []
+        for raw_item in handoff.get(bucket, []):
+            if not isinstance(raw_item, dict):
+                continue
+            text = str(raw_item.get("text") or "").strip()
+            source_ids = [source_id for source_id in raw_item.get("source_ids", []) if source_id in source_by_id]
+            if not text:
+                continue
+            if not source_ids and text != "No verified source-backed note found.":
+                continue
+            verified_items.append(
+                {
+                    "text": text,
+                    "source_ids": source_ids,
+                    "source": source_by_id[source_ids[0]].get("source") if source_ids else None,
+                    "important": any(source_by_id[source_id].get("important") for source_id in source_ids),
+                }
+            )
+        if not verified_items:
+            verified_items.append(
+                {
+                    "text": "No verified source-backed note found.",
+                    "source_ids": [],
+                    "source": None,
+                    "important": False,
+                }
+            )
+        verified[bucket] = verified_items[:3]
+    return verified
