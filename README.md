@@ -55,7 +55,7 @@ Backend:
 cd apps/backend
 C:\Users\thond\AppData\Local\Programs\Python\Python312\python.exe -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
 Frontend:
@@ -63,7 +63,7 @@ Frontend:
 ```powershell
 cd apps/frontend
 npm install
-npm run dev
+npm run dev -- --port 5173
 ```
 
 Open:
@@ -143,6 +143,17 @@ PASS: handoff memory demo lifecycle works end to end
 - `scripts/smoke_product.py`: end-to-end demo lifecycle test.
 - `docs/`: architecture, security, SRE, and submission docs.
 - `site/`: GitHub Pages microsite.
+- `handover/`: final submission bundle, demo runbook, and AI usage disclosure.
+
+## Final Handover Bundle
+
+Start with [`handover/README.md`](handover/README.md) for the final packet:
+
+- Product handover.
+- Local demo runbook.
+- AI usage disclosure for Codex, Gemini, Cognee, and AI-assisted visual work.
+- Submission copy.
+- Final checklist and remaining decisions.
 
 ## Boundaries
 
