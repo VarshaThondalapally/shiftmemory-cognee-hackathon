@@ -110,13 +110,13 @@ function App() {
     <div className="app">
       <header className="shell-header">
         <div>
-          <span className="eyebrow">Phase 1 local MVP</span>
+          <span className="eyebrow">Shift handoff workspace</span>
           <h1>ShiftMemory</h1>
-          <p>One shared memory for shift notes, handoffs, questions, corrections, and deletion.</p>
+          <p>One shared case history for notes, handoffs, questions, corrections, and removal.</p>
         </div>
         <div className="status-pill">
           <ShieldCheck size={17} />
-          Local memory adapter
+          Demo workspace
         </div>
       </header>
 
@@ -136,11 +136,11 @@ function App() {
           <div className="metrics">
             <div>
               <strong>{memories.length}</strong>
-              <span>remembered</span>
+              <span>notes</span>
             </div>
             <div>
               <strong>{importantCount}</strong>
-              <span>improved</span>
+              <span>important</span>
             </div>
           </div>
 
@@ -156,7 +156,7 @@ function App() {
               </select>
             </label>
             <label>
-              New memory
+              New shift note
               <textarea
                 value={noteText}
                 onChange={(event) => setNoteText(event.target.value)}
@@ -165,7 +165,7 @@ function App() {
             </label>
             <button type="submit" disabled={busy}>
               <Plus size={17} />
-              Remember
+              Add note
             </button>
           </form>
         </aside>
@@ -184,7 +184,7 @@ function App() {
 
           <section className="handoff">
             <h3>Morning handoff</h3>
-            {!handoff && <p className="empty">Generate a handoff from remembered notes.</p>}
+            {!handoff && <p className="empty">Generate a handoff from the notes on this case.</p>}
             {handoff && (
               <div className="handoff-grid">
                 <HandoffList title="Start here" items={handoff.start_here} />
@@ -196,20 +196,20 @@ function App() {
           </section>
 
           <section className="memory-list">
-            <h3>Case memory</h3>
+            <h3>Shift notes</h3>
             {memories.map((memory) => (
               <article key={memory.id} className={memory.important ? "memory important" : "memory"}>
                 <div>
                   <span className="tag">{memory.type}</span>
-                  {memory.important && <span className="tag important-tag">high signal</span>}
+                  {memory.important && <span className="tag important-tag">important</span>}
                 </div>
                 <p>{memory.text}</p>
                 <small>{memory.source}</small>
                 <div className="memory-actions">
-                  <button className="icon-action" onClick={() => improve(memory.id)} title="Improve">
+                  <button className="icon-action" onClick={() => improve(memory.id)} title="Mark important">
                     <CheckCircle2 size={16} />
                   </button>
-                  <button className="icon-action danger" onClick={() => forget(memory.id)} title="Forget">
+                  <button className="icon-action danger" onClick={() => forget(memory.id)} title="Remove note">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -228,13 +228,13 @@ function App() {
             />
             <button type="submit" disabled={busy}>
               <MessageSquareText size={17} />
-              Recall answer
+              Answer from notes
             </button>
             {answer && <p className="answer">{answer}</p>}
           </form>
 
           <label className="feedback-box">
-            Supervisor feedback
+            Supervisor note
             <textarea
               value={feedback}
               onChange={(event) => setFeedback(event.target.value)}
@@ -243,11 +243,11 @@ function App() {
           </label>
 
           <section className="trace">
-            <h3>Memory trace</h3>
+            <h3>Activity log</h3>
             {traces.slice(0, 8).map((trace) => (
               <div key={trace.id} className="trace-row">
-                <strong>{trace.operation}</strong>
-                <span>{trace.memory_ids.length} source(s)</span>
+                <strong>{operationLabel(trace.operation)}</strong>
+                <span>{trace.memory_ids.length} note(s)</span>
                 <small>{trace.latency_ms} ms</small>
               </div>
             ))}
@@ -266,14 +266,23 @@ function HandoffList({ title, items }) {
         items.map((item, index) => (
           <p key={`${title}-${index}`}>
             {item.text}
-            {item.source_ids?.length ? <span> source: {item.source_ids.join(", ")}</span> : null}
+            {item.source_ids?.length ? <span>{item.source_ids.length} source note(s)</span> : null}
           </p>
         ))
       ) : (
-        <p className="empty">No recalled memory.</p>
+        <p className="empty">No matching notes yet.</p>
       )}
     </div>
   );
+}
+
+function operationLabel(operation) {
+  return {
+    remember: "note added",
+    recall: "handoff checked",
+    improve: "marked important",
+    forget: "note removed",
+  }[operation] || operation;
 }
 
 createRoot(document.getElementById("root")).render(<App />);

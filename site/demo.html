@@ -580,11 +580,11 @@
         <div class="brand-mark">SM</div>
         <div>
           <h1>ShiftMemory</h1>
-          <p>Persistent handoff memory for care teams</p>
+          <p>Shared handoff history for care teams</p>
         </div>
       </div>
       <div class="shift-strip" aria-label="shift status">
-        <span class="shift-pill"><span class="status-dot"></span> Cognee memory adapter ready</span>
+        <span class="shift-pill"><span class="status-dot"></span> Handoff workspace ready</span>
         <span class="shift-pill">Morning shift briefing</span>
         <span class="shift-pill">3 open cases</span>
       </div>
@@ -608,7 +608,7 @@
           <div class="memory-score">
             <div class="metric">
               <strong id="memoryCount">0</strong>
-              <span>memories</span>
+              <span>notes</span>
             </div>
             <div class="metric">
               <strong id="riskCount">0</strong>
@@ -637,48 +637,48 @@
             <label for="memoryText">New shift note</label>
             <textarea id="memoryText" placeholder="Enter a note from the last shift"></textarea>
           </div>
-          <button class="primary-btn" type="submit">Remember</button>
+          <button class="primary-btn" type="submit">Add note</button>
         </form>
       </section>
 
       <aside class="right-stack">
         <section class="panel handoff">
           <div class="panel-header" style="padding:0 0 12px;border-bottom:0;">
-            <h2>AI Handoff Brief</h2>
-            <button class="secondary-btn" id="recallBtn">Recall</button>
+            <h2>Handoff Brief</h2>
+            <button class="secondary-btn" id="recallBtn">Regenerate</button>
           </div>
           <div class="brief" id="handoffBrief"></div>
         </section>
 
         <section class="panel memory-map">
           <div class="panel-header" style="padding:0 0 4px;border-bottom:0;">
-            <h2>Cognee Use</h2>
+            <h2>How It Stays Current</h2>
           </div>
           <div class="map-row">
             <div class="map-icon remember">R</div>
-            <div><strong>Remember</strong><code>cognee.remember(case notes, files, URLs)</code></div>
+            <div><strong>Save</strong><code>New notes stay with the case.</code></div>
           </div>
           <div class="map-row">
             <div class="map-icon recall">Q</div>
-            <div><strong>Recall</strong><code>cognee.recall("what changed since last shift?")</code></div>
+            <div><strong>Find</strong><code>The brief pulls relevant prior notes.</code></div>
           </div>
           <div class="map-row">
             <div class="map-icon improve">I</div>
-            <div><strong>Improve</strong><code>cognee.improve(feedback signals)</code></div>
+            <div><strong>Prioritize</strong><code>Important corrections move up.</code></div>
           </div>
           <div class="map-row">
             <div class="map-icon forget">F</div>
-            <div><strong>Forget</strong><code>cognee.forget(dataset or memory id)</code></div>
+            <div><strong>Remove</strong><code>Stale notes stop appearing.</code></div>
           </div>
         </section>
 
         <section class="panel feedback">
           <div class="panel-header" style="padding:0 0 4px;border-bottom:0;">
-            <h2>Memory Feedback</h2>
+            <h2>Supervisor Note</h2>
           </div>
           <input id="feedbackText" placeholder="Example: prioritize family calls in handoff" />
           <div class="feedback-actions">
-            <button class="secondary-btn" id="improveBtn">Improve</button>
+            <button class="secondary-btn" id="improveBtn">Mark important</button>
             <button class="secondary-btn" id="resetBtn">Reset demo</button>
           </div>
         </section>
@@ -827,12 +827,12 @@
         row.innerHTML = `
           <div class="memory-time">${memory.time}<br><span class="${badgeClass(memory.type)}">${memory.type}</span></div>
           <div class="memory-body">
-            <div class="memory-title">${memory.improved ? "High-signal memory" : "Shift memory"}</div>
+            <div class="memory-title">${memory.improved ? "Important note" : "Shift note"}</div>
             <div class="memory-text">${escapeHtml(memory.text)}</div>
           </div>
           <div class="memory-actions">
             <button class="icon-btn" title="Mark important" aria-label="Mark important" data-action="improve" data-id="${memory.id}">!</button>
-            <button class="icon-btn" title="Forget memory" aria-label="Forget memory" data-action="forget" data-id="${memory.id}">x</button>
+            <button class="icon-btn" title="Remove note" aria-label="Remove note" data-action="forget" data-id="${memory.id}">x</button>
           </div>
         `;
         timeline.appendChild(row);
@@ -858,10 +858,10 @@
 
       return [
         ["What changed", clinical.at(-1) || memories.at(-1)?.text || "No new shift changes recorded."],
-        ["Risks to watch", risks.at(-1) || "No active risk memory for this case."],
-        ["Next actions", tasks.at(-1) || "No pending task memory for this case."],
+        ["Risks to watch", risks.at(-1) || "No active risk note for this case."],
+        ["Next actions", tasks.at(-1) || "No pending task note for this case."],
         ["People context", family.at(-1) || "No family or contact updates recorded."],
-        ["Memory signal", important.at(-1) || "No feedback-improved memory yet."]
+        ["Important context", important.at(-1) || "No supervisor-marked note yet."]
       ];
     }
 
@@ -892,7 +892,7 @@
       });
       saveState();
       render();
-      showToast("remember(): note stored in case memory");
+      showToast("Note added to this case");
     }
 
     function improveMemory(memoryId) {
@@ -902,7 +902,7 @@
       memory.improved = true;
       saveState();
       render();
-      showToast("improve(): memory marked high-signal");
+      showToast("Marked important for future handoffs");
     }
 
     function forgetMemory(memoryId) {
@@ -910,14 +910,14 @@
       item.memories = item.memories.filter(entry => entry.id !== memoryId);
       saveState();
       render();
-      showToast("forget(): memory removed from handoff");
+      showToast("Note removed from future handoffs");
     }
 
     memoryForm.addEventListener("submit", event => {
       event.preventDefault();
       const text = memoryText.value.trim();
       if (!text) {
-        showToast("Add a note before remembering");
+        showToast("Add a note first");
         return;
       }
       remember(memoryType.value, text);
@@ -935,13 +935,13 @@
 
     recallBtn.addEventListener("click", () => {
       renderBrief();
-      showToast("recall(): handoff regenerated from memory");
+      showToast("Handoff regenerated from case notes");
     });
 
     improveBtn.addEventListener("click", () => {
       const text = feedbackText.value.trim();
       if (!text) {
-        showToast("Add feedback to improve memory");
+        showToast("Add a supervisor note first");
         return;
       }
       remember("task", `Feedback learned: ${text}`);
@@ -950,7 +950,7 @@
       feedbackText.value = "";
       saveState();
       render();
-      showToast("improve(): feedback stored as memory signal");
+      showToast("Supervisor note marked important");
     });
 
     resetBtn.addEventListener("click", () => {

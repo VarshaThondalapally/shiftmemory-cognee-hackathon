@@ -86,10 +86,10 @@ def ask_case(case_id: str, payload: AskRequest) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="case_not_found")
 
     if not recalled:
-        answer = "I do not have enough remembered context to answer that."
+        answer = "I do not have enough notes on this case to answer that."
     else:
         top = recalled[0]
-        answer = f"Most relevant memory: {top['text']}"
+        answer = f"Most relevant note: {top['text']}"
     return {"answer": answer, "sources": recalled, "trace": trace}
 
 
@@ -142,12 +142,12 @@ def build_handoff(items: list[dict[str, Any]]) -> dict[str, Any]:
             buckets["start_here"].append(entry)
 
     if not buckets["start_here"]:
-        buckets["start_here"].append({"text": "Review the remembered notes before starting the shift.", "source_ids": []})
+        buckets["start_here"].append({"text": "Review the case notes before starting the shift.", "source_ids": []})
     if not buckets["watch"]:
-        buckets["unknowns"].append({"text": "No active risk memory was recalled for this case.", "source_ids": []})
+        buckets["unknowns"].append({"text": "No active risk note was found for this case.", "source_ids": []})
 
     return {
-        "summary": "Morning handoff generated from remembered case context.",
+        "summary": "Morning handoff generated from the case notes.",
         "start_here": buckets["start_here"][:3],
         "watch": buckets["watch"][:3],
         "tasks": buckets["tasks"][:3],
