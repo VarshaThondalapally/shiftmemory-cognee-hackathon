@@ -80,10 +80,16 @@ If a permanent host is not available before submission, a Cloudflare quick tunne
 
 This is acceptable only as a short-lived backup because the URL works only while the laptop, backend, and tunnel stay running.
 
-Submitted quick-tunnel URL:
+Submitted stable live URL:
 
 ```text
-https://factors-needle-issued-partition.trycloudflare.com
+https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/live.html
+```
+
+Current quick-tunnel target:
+
+```text
+https://travels-makeup-founder-poems.trycloudflare.com
 ```
 
 ## Verified Locally

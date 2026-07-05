@@ -13,9 +13,15 @@ Also include:
 
 ## Submitted Live URL
 
-`https://factors-needle-issued-partition.trycloudflare.com`
+`https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/live.html`
 
-This is a Cloudflare quick tunnel to the local FastAPI/React app. Cognee and Gemini keys remain server-side in the backend process. The URL works only while the laptop, backend server, and tunnel process stay running.
+This is a stable GitHub Pages redirect to the current Cloudflare quick tunnel. Cognee and Gemini keys remain server-side in the backend process. The live app works only while the laptop, backend server, and tunnel process stay running.
+
+Current tunnel target:
+
+```text
+https://travels-makeup-founder-poems.trycloudflare.com
+```
 
 ## API Key Rule
 

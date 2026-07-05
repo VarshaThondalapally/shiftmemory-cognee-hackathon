@@ -16,9 +16,9 @@ A secure role-based handoff app where night caregivers save shift details once, 
 
 ## Deployed Link
 
-`https://factors-needle-issued-partition.trycloudflare.com`
+`https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/live.html`
 
-Note: this is a Cloudflare quick tunnel to the live FastAPI/React app, with Cognee and Gemini keys kept server-side. GitHub Pages remains the public explainer: `https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/`
+Note: this stable GitHub Pages URL redirects to the current Cloudflare quick tunnel for the live FastAPI/React app. Cognee and Gemini keys stay server-side. GitHub Pages remains the public explainer: `https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/`
 
 ## Demo Video Link
 

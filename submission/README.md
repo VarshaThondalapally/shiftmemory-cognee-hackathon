@@ -6,7 +6,7 @@ This folder is the final submission packet for the Cognee hackathon.
 
 - GitHub repo: `https://github.com/VarshaThondalapally/shiftmemory-cognee-hackathon`
 - Landing page: `https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/`
-- Live product URL submitted: `https://factors-needle-issued-partition.trycloudflare.com`
+- Live product URL submitted: `https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/live.html`
 - Demo video file to upload to YouTube: `submission/video/caregiver-handoff-memory-demo.mp4`
 - Submission form answers: [SUBMISSION_FORM_ANSWERS.md](SUBMISSION_FORM_ANSWERS.md)
 - AI usage disclosure: [../handover/AI_USAGE_DISCLOSURE.md](../handover/AI_USAGE_DISCLOSURE.md)
