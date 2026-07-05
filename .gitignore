@@ -1,6 +1,9 @@
 .DS_Store
 Thumbs.db
 node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
 .env
 .env.*
 !.env.example
@@ -8,3 +11,4 @@ dist/
 build/
 coverage/
 *.log
+apps/backend/data/local_memory.json
