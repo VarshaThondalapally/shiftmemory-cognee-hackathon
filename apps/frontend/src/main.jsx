@@ -9,7 +9,6 @@ import {
   Plus,
   RefreshCw,
   RotateCcw,
-  Search,
   Trash2,
 } from "lucide-react";
 import "./styles.css";
@@ -17,11 +16,34 @@ import "./styles.css";
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 const screens = [
-  { id: "handoff", label: "Morning", icon: ClipboardList },
-  { id: "notes", label: "Night Notes", icon: Moon },
-  { id: "ask", label: "Ask", icon: Search },
-  { id: "review", label: "Review", icon: BadgeCheck },
-  { id: "proof", label: "Proof", icon: Eye },
+  {
+    id: "notes",
+    label: "Night caregiver",
+    icon: Moon,
+    title: "End the night without losing the small details.",
+    body: "The person leaving the shift saves only what changed. The memory layer keeps it available after refresh, logout, or a different worker taking over.",
+  },
+  {
+    id: "handoff",
+    label: "Morning lead",
+    icon: ClipboardList,
+    title: "Start the morning from remembered context.",
+    body: "The morning lead gets a source-backed handoff and can ask follow-up questions without asking the night caregiver to repeat everything.",
+  },
+  {
+    id: "review",
+    label: "Supervisor",
+    icon: BadgeCheck,
+    title: "Keep the shared memory accurate.",
+    body: "A supervisor can mark what matters or remove stale notes before they keep influencing future handoffs.",
+  },
+  {
+    id: "proof",
+    label: "Proof mode",
+    icon: Eye,
+    title: "Show what the memory layer actually did.",
+    body: "This screen is for judges and engineers: it exposes the redacted remember, recall, improve, and forget traces behind the product flow.",
+  },
 ];
 
 function App() {
@@ -32,7 +54,7 @@ function App() {
   const [handoffSources, setHandoffSources] = useState([]);
   const [evidence, setEvidence] = useState(null);
   const [health, setHealth] = useState(null);
-  const [view, setView] = useState("handoff");
+  const [view, setView] = useState("notes");
   const [noteText, setNoteText] = useState("");
   const [noteType, setNoteType] = useState("shift");
   const [question, setQuestion] = useState("What should I tell the family this morning?");
@@ -46,7 +68,7 @@ function App() {
   const currentCase = cases.find((item) => item.id === caseId);
   const importantCount = useMemo(() => memories.filter((item) => item.important).length, [memories]);
   const reviewCount = useMemo(() => memories.filter((item) => item.type === "review").length, [memories]);
-  const newestNotes = memories.slice(0, 4);
+  const activeScreen = screens.find((screen) => screen.id === view) || screens[0];
 
   async function api(path, options = {}) {
     const response = await fetch(`${API_URL}${path}`, {
@@ -99,7 +121,7 @@ function App() {
         body: JSON.stringify({ type: noteType, text: noteText, source: "night worker note" }),
       });
       setNoteText("");
-      setView("handoff");
+      setView("notes");
     });
   }
 
@@ -129,7 +151,7 @@ function App() {
       setQuestion(text);
       setAnswer(data.answer);
       setAnswerSources(data.sources);
-      setView("ask");
+      setView("handoff");
     });
   }
 
@@ -160,7 +182,7 @@ function App() {
       setHandoffSources([]);
       setAnswer(null);
       setAnswerSources([]);
-      setView("handoff");
+      setView("notes");
     });
   }
 
@@ -169,25 +191,34 @@ function App() {
       <header className="hero">
         <div className="hero-copy">
           <span className="eyebrow">{caseData?.team || "Home care handoff"}</span>
-          <h1>Morning handoff for {caseData?.name || "Avery"}</h1>
-          <p>{caseData?.guide?.problem || "Morning staff needs the few things that changed overnight."}</p>
+          <h1>{activeScreen.title}</h1>
+          <p>{activeScreen.body}</p>
         </div>
 
-        <div className="case-switcher">
-          <label>
-            Current resident
-            <select value={caseId} onChange={(event) => setCaseId(event.target.value)}>
-              {cases.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="quiet-button" type="button" onClick={resetDemo} disabled={busy} title="Reset demo notes">
-            <RotateCcw size={17} />
-            Reset
-          </button>
+        <div className="hero-panel">
+          <div className="case-switcher">
+            <label>
+              Care recipient
+              <select value={caseId} onChange={(event) => setCaseId(event.target.value)}>
+                {cases.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="quiet-button" type="button" onClick={resetDemo} disabled={busy} title="Reset demo notes">
+              <RotateCcw size={17} />
+              Reset demo
+            </button>
+          </div>
+          <div className="memory-summary" aria-label="Current memory summary">
+            <span>Memory in this case</span>
+            <strong>{currentCase?.memory_count || memories.length} notes</strong>
+            <small>
+              {importantCount} priority · {reviewCount} needs review
+            </small>
+          </div>
         </div>
       </header>
 
@@ -211,37 +242,20 @@ function App() {
       {error && <div className="error-banner">{error}</div>}
 
       <main className="workspace">
-        <aside className="context-rail">
-          <div className="case-summary">
-            <span className="eyebrow">What changed overnight</span>
-            <h2>{currentCase?.memory_count || memories.length} remembered notes</h2>
-            <div className="summary-stats">
-              <span>{importantCount} important</span>
-              <span>{reviewCount} to review</span>
-            </div>
-          </div>
-
-          <div className="note-stream">
-            {newestNotes.map((memory) => (
-              <article key={memory.id} className="rail-note">
-                <span className={memory.important ? "dot hot" : "dot"} />
-                <div>
-                  <strong>{labelForType(memory.type)}</strong>
-                  <p>{memory.text}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </aside>
-
         <section className="stage">
           {view === "handoff" && (
             <HandoffScreen
               busy={busy}
+              name={caseData?.name || "Avery"}
               handoff={handoff}
               sources={handoffSources}
+              question={question}
+              answer={answer}
+              answerSources={answerSources}
+              setQuestion={setQuestion}
               onGenerate={generateHandoff}
-              onAskFamily={(questionText) => askQuestion(null, questionText)}
+              onAsk={askQuestion}
+              onAskPreset={(questionText) => askQuestion(null, questionText)}
             />
           )}
           {view === "notes" && (
@@ -253,17 +267,6 @@ function App() {
               setNoteText={setNoteText}
               setNoteType={setNoteType}
               onSubmit={addNote}
-            />
-          )}
-          {view === "ask" && (
-            <AskScreen
-              busy={busy}
-              question={question}
-              answer={answer}
-              sources={answerSources}
-              setQuestion={setQuestion}
-              onSubmit={askQuestion}
-              onPreset={(preset) => askQuestion(null, preset)}
             />
           )}
           {view === "review" && (
@@ -283,14 +286,26 @@ function App() {
   );
 }
 
-function HandoffScreen({ busy, handoff, sources, onGenerate, onAskFamily }) {
+function HandoffScreen({
+  busy,
+  name,
+  handoff,
+  sources,
+  question,
+  answer,
+  answerSources,
+  setQuestion,
+  onGenerate,
+  onAsk,
+  onAskPreset,
+}) {
   return (
     <div className="screen-layout">
-      <div className="action-strip">
+      <div className="role-strip">
         <div>
-          <span className="eyebrow">First action</span>
-          <h2>Generate today&apos;s handoff</h2>
-          <p>The morning worker clicks once and gets the night shift context back without pasting notes.</p>
+          <span className="eyebrow">Morning lead</span>
+          <h2>Build the first brief for {name}</h2>
+          <p>Start from the memory that already exists instead of asking someone to paste the night notes again.</p>
         </div>
         <button className="primary-action" type="button" onClick={onGenerate} disabled={busy}>
           <RefreshCw size={18} />
@@ -298,35 +313,62 @@ function HandoffScreen({ busy, handoff, sources, onGenerate, onAskFamily }) {
         </button>
       </div>
 
-      {!handoff ? (
-        <div className="empty-state">
-          <ClipboardList size={38} />
-          <h3>No handoff generated yet</h3>
-          <p>Click generate to turn the remembered night notes into a morning checklist.</p>
-        </div>
-      ) : (
-        <>
-          <div className="handoff-board">
-            <HandoffColumn title="Before 9 AM" items={handoff.before_9} accent="urgent" />
-            <HandoffColumn title="Watch Today" items={handoff.watch_today} accent="watch" />
-            <HandoffColumn title="Care Preference" items={handoff.care_preferences} accent="calm" />
-            <HandoffColumn title="Later Today" items={handoff.later_today} accent="task" />
-            <HandoffColumn title="Review" items={handoff.review_with_supervisor} accent="review" />
-          </div>
-          <div className="handoff-footer">
-            <p>{handoff.safety_note}</p>
-            <button
-              className="quiet-button"
-              type="button"
-              onClick={() => onAskFamily("What should I tell the family this morning?")}
-            >
-              <MessageSquareText size={17} />
-              Ask about family update
+      <div className="morning-grid">
+        <section className="handoff-area">
+          {!handoff ? (
+            <div className="empty-state">
+              <ClipboardList size={38} />
+              <h3>No handoff generated yet</h3>
+              <p>Click generate. The app will recall stored notes and turn them into the morning brief.</p>
+            </div>
+          ) : (
+            <>
+              <div className="handoff-board">
+                <HandoffColumn title="Before 9 AM" items={handoff.before_9} accent="urgent" />
+                <HandoffColumn title="Watch Today" items={handoff.watch_today} accent="watch" />
+                <HandoffColumn title="Care Preference" items={handoff.care_preferences} accent="calm" />
+                <HandoffColumn title="Later Today" items={handoff.later_today} accent="task" />
+                <HandoffColumn title="Review" items={handoff.review_with_supervisor} accent="review" />
+              </div>
+              <div className="handoff-footer">
+                <p>{handoff.safety_note}</p>
+              </div>
+              <SourceList title="Sources used" sources={sources} />
+            </>
+          )}
+        </section>
+
+        <aside className="question-panel">
+          <form className="ask-form" onSubmit={onAsk}>
+            <span className="eyebrow">Follow-up</span>
+            <h2>Ask the remembered notes</h2>
+            <textarea value={question} onChange={(event) => setQuestion(event.target.value)} />
+            <div className="preset-row">
+              <button type="button" className="quiet-button" onClick={() => onAskPreset("What should I tell the family this morning?")}>
+                Family update
+              </button>
+              <button type="button" className="quiet-button" onClick={() => onAskPreset("What should I watch today?")}>
+                Watch item
+              </button>
+              <button type="button" className="quiet-button" onClick={() => onAskPreset("What changed after 3 AM?")}>
+                After 3 AM
+              </button>
+            </div>
+            <button className="primary-action" type="submit" disabled={busy}>
+              <MessageSquareText size={18} />
+              Answer from memory
             </button>
-          </div>
-          <SourceList title="Sources used" sources={sources} />
-        </>
-      )}
+          </form>
+
+          {answer && (
+            <section className="answer-panel">
+              <span className="eyebrow">Answer</span>
+              <p>{answer}</p>
+              <SourceList title="Why this answer" sources={answerSources} />
+            </section>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }
@@ -335,11 +377,11 @@ function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteT
   return (
     <div className="screen-layout two-column">
       <form className="note-form" onSubmit={onSubmit}>
-        <span className="eyebrow">Night worker</span>
-        <h2>Add what changed</h2>
-        <p>One short note is enough. The morning worker should not need to read a whole chat thread.</p>
+        <span className="eyebrow">Night caregiver</span>
+        <h2>Save the thing the morning team must not miss</h2>
+        <p>Write the note the way the caregiver would say it. The app handles memory, recall, and source tracking behind the scenes.</p>
         <label>
-          Note type
+          What kind of note is this?
           <select value={noteType} onChange={(event) => setNoteType(event.target.value)}>
             <option value="shift">General</option>
             <option value="risk">Watch today</option>
@@ -354,18 +396,18 @@ function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteT
           <textarea
             value={noteText}
             onChange={(event) => setNoteText(event.target.value)}
-            placeholder="Example: Family asked for a callback before 9 AM."
+            placeholder="Example: Avery woke again around 3:10 AM, settled after water, and should be checked gently before breakfast."
           />
         </label>
         <button className="primary-action" type="submit" disabled={busy}>
           <Plus size={18} />
-          Add note
+          Remember for morning
         </button>
       </form>
 
-      <div className="timeline">
-        <span className="eyebrow">Current memory</span>
-        <h2>Notes available for handoff</h2>
+      <div className="timeline timeline-panel">
+        <span className="eyebrow">What the next shift can recall</span>
+        <h2>Stored notes for this care recipient</h2>
         {memories.map((memory) => (
           <article key={memory.id} className="timeline-item">
             <span className={memory.important ? "timeline-pin important" : "timeline-pin"} />
@@ -381,56 +423,21 @@ function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteT
   );
 }
 
-function AskScreen({ busy, question, answer, sources, setQuestion, onSubmit, onPreset }) {
-  return (
-    <div className="screen-layout">
-      <form className="ask-form" onSubmit={onSubmit}>
-        <span className="eyebrow">Morning worker</span>
-        <h2>Ask a question from the notes</h2>
-        <textarea value={question} onChange={(event) => setQuestion(event.target.value)} />
-        <div className="preset-row">
-          <button type="button" className="quiet-button" onClick={() => onPreset("What should I tell the family this morning?")}>
-            Family update
-          </button>
-          <button type="button" className="quiet-button" onClick={() => onPreset("What should I watch today?")}>
-            Watch item
-          </button>
-          <button type="button" className="quiet-button" onClick={() => onPreset("What changed about breakfast?")}>
-            Breakfast
-          </button>
-        </div>
-        <button className="primary-action" type="submit" disabled={busy}>
-          <MessageSquareText size={18} />
-          Answer from notes
-        </button>
-      </form>
-
-      {answer && (
-        <section className="answer-panel">
-          <span className="eyebrow">Answer</span>
-          <p>{answer}</p>
-          <SourceList title="Why this answer" sources={sources} />
-        </section>
-      )}
-    </div>
-  );
-}
-
 function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForget }) {
   return (
     <div className="screen-layout">
       <div className="action-strip">
         <div>
           <span className="eyebrow">Supervisor review</span>
-          <h2>Prioritize or remove notes</h2>
-          <p>This is where the system learns what matters and stops using notes that are wrong.</p>
+          <h2>Decide what should keep shaping future handoffs</h2>
+          <p>Use this when a note is important enough to surface again, or when an old note should stop appearing.</p>
         </div>
         <label className="feedback-input">
-          Optional correction
+          Optional reason
           <input
             value={feedback}
             onChange={(event) => setFeedback(event.target.value)}
-            placeholder="Example: this should be mentioned before breakfast"
+            placeholder="Example: mention this before breakfast"
           />
         </label>
       </div>
@@ -447,7 +454,7 @@ function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForg
             <div className="review-actions">
               <button type="button" className="quiet-button" onClick={() => onImprove(memory.id)} disabled={busy}>
                 <BadgeCheck size={17} />
-                Prioritize
+                Keep important
               </button>
               <button type="button" className="danger-button" onClick={() => onForget(memory.id)} disabled={busy}>
                 <Trash2 size={17} />

@@ -113,9 +113,9 @@ h3 {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
   gap: 28px;
-  align-items: end;
+  align-items: center;
   padding: 34px 38px 24px;
   background:
     linear-gradient(90deg, rgba(17, 100, 77, 0.08), rgba(47, 93, 124, 0.08)),
@@ -125,6 +125,7 @@ h3 {
 
 .hero-copy p,
 .action-strip p,
+.role-strip p,
 .note-form p,
 .empty-state p,
 .proof-step p,
@@ -146,6 +147,33 @@ h3 {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: end;
+}
+
+.hero-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.memory-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 14px;
+  align-items: end;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.memory-summary span,
+.memory-summary small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.memory-summary strong {
+  color: var(--green);
+  font-size: 24px;
+  line-height: 1;
 }
 
 .screen-tabs {
@@ -208,8 +236,6 @@ h3 {
 }
 
 .workspace {
-  display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
   min-height: calc(100vh - 168px);
 }
 
@@ -286,7 +312,7 @@ h3 {
 .screen-layout {
   display: grid;
   gap: 24px;
-  max-width: 1180px;
+  max-width: 1320px;
 }
 
 .screen-layout.two-column {
@@ -294,13 +320,34 @@ h3 {
   align-items: start;
 }
 
-.action-strip {
+.action-strip,
+.role-strip {
   display: flex;
   justify-content: space-between;
   gap: 28px;
   align-items: center;
   padding-bottom: 22px;
   border-bottom: 1px solid var(--line);
+}
+
+.morning-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 28px;
+  align-items: start;
+}
+
+.handoff-area {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.question-panel {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 14px;
 }
 
 .empty-state {
@@ -320,11 +367,7 @@ h3 {
 .handoff-board {
   display: grid;
   grid-template-columns: repeat(5, minmax(160px, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--line);
+  gap: 12px;
 }
 
 .handoff-column {
@@ -334,6 +377,9 @@ h3 {
   gap: 14px;
   padding: 18px;
   background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--blue);
+  border-radius: 8px;
 }
 
 .handoff-column h3 {
@@ -344,16 +390,36 @@ h3 {
   color: var(--red);
 }
 
+.handoff-column.urgent {
+  border-top-color: var(--red);
+}
+
 .handoff-column.watch h3 {
   color: var(--gold);
+}
+
+.handoff-column.watch {
+  border-top-color: var(--gold);
 }
 
 .handoff-column.calm h3 {
   color: var(--green);
 }
 
+.handoff-column.calm {
+  border-top-color: var(--green);
+}
+
+.handoff-column.task {
+  border-top-color: var(--blue);
+}
+
 .handoff-column.review h3 {
   color: var(--violet);
+}
+
+.handoff-column.review {
+  border-top-color: var(--violet);
 }
 
 .handoff-column article {
@@ -417,6 +483,10 @@ h3 {
   display: grid;
   gap: 0;
   padding-left: 6px;
+}
+
+.timeline-panel {
+  padding: 4px 0 0;
 }
 
 .timeline h2 {
@@ -709,7 +779,7 @@ h3 {
 
 @media (max-width: 900px) {
   .hero,
-  .workspace,
+  .morning-grid,
   .screen-layout.two-column {
     grid-template-columns: 1fr;
   }
@@ -720,6 +790,7 @@ h3 {
   }
 
   .action-strip,
+  .role-strip,
   .handoff-footer,
   .review-item {
     align-items: stretch;
