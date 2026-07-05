@@ -24,7 +24,7 @@ The demo must prove:
 7. Regenerate or ask again to show improvement.
 8. Forget one note.
 9. Regenerate to prove forgotten note is gone.
-10. Open judge trace to show Cognee lifecycle operations.
+10. Open technical trace to show Cognee lifecycle operations.
 
 ## Day-by-Day Plan
 
@@ -77,7 +77,7 @@ Exit criteria:
 - note added in one session appears in handoff after reload;
 - generated handoff includes source IDs.
 
-### Day 3: Improve, Forget, and Judge Trace
+### Day 3: Improve, Forget, and Technical Trace
 
 Deliver:
 
@@ -91,7 +91,7 @@ Exit criteria:
 
 - feedback is logged and sent to Cognee;
 - forgotten source no longer appears;
-- judge can see remember, recall, improve, forget.
+- reviewer can see remember, recall, improve, forget.
 
 ### Day 4: Security and Reliability Polish
 
@@ -124,7 +124,7 @@ Deliver:
 
 Exit criteria:
 
-- judge can run or watch demo without confusion;
+- reviewer can run or watch demo without confusion;
 - project clearly qualifies for Best Use of Cognee Cloud.
 
 ## Acceptance Tests
@@ -260,7 +260,7 @@ Step 4:
 
 Step 5:
 
-"Judge mode shows the memory trace: remember, recall, improve, forget, dataset, source IDs, and latency."
+"Proof mode shows the memory trace: remember, recall, improve, forget, dataset, source IDs, and latency."
 
 Closing:
 
@@ -272,7 +272,7 @@ MVP is done when:
 
 - real Cognee API or SDK is used;
 - normal UI hides Cognee complexity;
-- judge trace proves Cognee lifecycle;
+- technical trace proves Cognee lifecycle;
 - generated output is source-backed;
 - forget is implemented;
 - case isolation is tested;

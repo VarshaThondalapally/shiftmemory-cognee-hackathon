@@ -44,10 +44,10 @@ USERS: dict[str, dict[str, Any]] = {
     },
     "judge-demo": {
         "id": "judge-demo",
-        "name": "Hackathon judge",
-        "email": "judge@demo.local",
+        "name": "Demo reviewer",
+        "email": "reviewer@demo.local",
         "role": "demo_judge",
-        "title": "Demo reviewer",
+        "title": "Technical reviewer",
         "password": "demo",
     },
 }

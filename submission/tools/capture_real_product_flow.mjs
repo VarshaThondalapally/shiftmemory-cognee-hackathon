@@ -28,7 +28,7 @@ async function resetDemoData() {
     body: JSON.stringify({ user_id: "judge-demo", password: "demo" }),
   });
   if (!loginResponse.ok) {
-    throw new Error(`Judge login failed: ${loginResponse.status}`);
+    throw new Error(`Reviewer login failed: ${loginResponse.status}`);
   }
   const session = await loginResponse.json();
   const resetResponse = await fetch(`${apiUrl}/v1/demo/reset`, {
@@ -158,7 +158,7 @@ async function main() {
     await screenshot(page, "10_supervisor_improve_memory");
 
     await signOut(page);
-    await login(page, "Hackathon judge", "Memory lifecycle evidence");
+    await login(page, "Demo reviewer", "Memory lifecycle evidence");
     await waitForText(page, "cognee-cloud", 60000);
     await screenshot(page, "11_judge_proof_top");
     await page.evaluate(() => window.scrollTo(0, 520));

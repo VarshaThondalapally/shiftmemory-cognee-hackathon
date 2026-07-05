@@ -17,7 +17,7 @@ Cognee is not a hidden add-on. Cognee is the product's memory substrate:
 - `improve`: enrich memory and tune future recall using supervisor feedback.
 - `forget`: remove stale, sensitive, incorrect, or expired memories.
 
-The end user does not manage Cognee. The end user manages human work: notes, handoffs, questions, confirmations, and corrections. Judges and engineers get a separate memory trace view that proves Cognee usage.
+The end user does not manage Cognee. The end user manages human work: notes, handoffs, questions, confirmations, and corrections. Reviewers and engineers get a separate memory trace view that proves Cognee usage.
 
 ## Packet Contents
 
@@ -41,7 +41,7 @@ Do not start implementation until these are true:
 - The demo uses synthetic data only.
 - The app can prove that a note remembered in one session is recalled by another session or agent surface.
 - The app can forget a note and show it no longer appears in future recall.
-- The README and pitch explain Cognee's role clearly enough that a judge can see why this is not a generic LLM wrapper.
+- The README and pitch explain Cognee's role clearly enough that a reviewer can see why this is not a generic LLM wrapper.
 
 ## Primary Sources
 

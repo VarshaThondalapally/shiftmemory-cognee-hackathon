@@ -86,7 +86,7 @@ At 3 AM Avery woke up twice, asked for water, and settled after the room was kep
    - Remove a stale note if present.
    - Generate another handoff and confirm the changed memory behavior.
 
-6. Sign in as `Hackathon Judge`.
+6. Sign in as `Demo reviewer`.
    - Open proof mode.
    - Show memory backend, reasoning layer, source IDs, and redacted traces.
 

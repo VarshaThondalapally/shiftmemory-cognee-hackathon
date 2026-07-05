@@ -19,7 +19,7 @@ On screen:
 
 Voiceover:
 
-"The product is not one shared note screen. Each person gets their own workspace. The supervisor assigns workers, the night caregiver records what changed, the morning lead receives the handoff, and judge mode shows the memory proof."
+"The product is not one shared note screen. Each person gets their own workspace. The supervisor assigns workers, the night caregiver records what changed, the morning lead receives the handoff, and proof mode shows the memory proof."
 
 On screen:
 
@@ -89,7 +89,7 @@ On screen:
 
 Voiceover:
 
-"For judges, proof mode shows the backend-to-memory trace: Cognee Cloud is active, Gemini is active, keys are redacted, and each memory operation is visible with sources."
+"For reviewers, proof mode shows the backend-to-memory trace: Cognee Cloud is active, Gemini is active, keys are redacted, and each memory operation is visible with sources."
 
 On screen:
 

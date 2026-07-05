@@ -24,7 +24,7 @@ Note: the deployed link is the public landing/demo explainer. The full interacti
 
 Upload `submission/video/caregiver-handoff-memory-demo.mp4` to YouTube as unlisted, then paste the YouTube URL here.
 
-The video is a real walkthrough captured from the running product: supervisor assignment, night caregiver note capture, morning handoff recall, source-backed follow-up answer, supervisor improve action, and judge proof mode.
+The video is a real walkthrough captured from the running product: supervisor assignment, night caregiver note capture, morning handoff recall, source-backed follow-up answer, supervisor improve action, and technical proof mode.
 
 ## Problem
 
@@ -40,7 +40,7 @@ Caregiver Handoff Memory gives each actor a separate workspace:
 - Night caregiver saves only what changed during the shift.
 - Morning lead generates a source-backed handoff and asks follow-up questions.
 - Supervisor marks important memory or removes stale context.
-- Judge mode shows the memory lifecycle proof.
+- Proof mode shows the memory lifecycle proof.
 
 ## How Cognee Is Used
 

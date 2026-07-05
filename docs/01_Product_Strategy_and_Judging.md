@@ -18,7 +18,7 @@ Primary demo user:
 
 Hackathon evaluator:
 
-- Cognee team member or judge evaluating whether this product uses Cognee deeply, not superficially.
+- Cognee team member or reviewer evaluating whether this product uses Cognee deeply, not superficially.
 
 Future buyer:
 
@@ -51,7 +51,7 @@ The innovation is in making memory operational:
 
 ### Technical Excellence
 
-The MVP must be judged by implementation discipline:
+The MVP must be evaluated by implementation discipline:
 
 - backend-controlled Cognee access;
 - strict tenant and case scoping;
@@ -84,7 +84,7 @@ The user should never see Cognee terminology in the normal product flow. They sh
 - Correct answer
 - Remove memory
 
-The judge mode can expose the technical trace.
+The proof mode can expose the technical trace.
 
 ### Presentation Quality
 
@@ -128,4 +128,4 @@ Those create compliance and scope risk. The hackathon product should be a workfl
 - The system should say "unknown" when memory is insufficient.
 - Users correct memory through normal workflow actions.
 - Deletion is a product feature, not an admin chore.
-- Cognee proof should be available to judges without exposing technical complexity to end users.
+- Cognee proof should be available to reviewers without exposing technical complexity to end users.

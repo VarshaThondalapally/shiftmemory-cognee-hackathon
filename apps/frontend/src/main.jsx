@@ -43,7 +43,7 @@ const screens = [
     label: "Proof mode",
     icon: Eye,
     title: "Show what the memory layer actually did.",
-    body: "This screen is for judges and engineers: it exposes the redacted remember, recall, improve, and forget traces behind the product flow.",
+    body: "This technical proof screen exposes the redacted remember, recall, improve, and forget traces behind the product flow.",
   },
 ];
 
@@ -644,7 +644,7 @@ function LoginScreen({ users, suggestedUserId, busy, error, onLogin }) {
     { id: "night-demo", name: "Nia Brooks", title: "Night caregiver", role: "night_caregiver" },
     { id: "morning-demo", name: "Omar Chen", title: "Morning lead", role: "morning_lead" },
     { id: "supervisor-demo", name: "Rosa Lee", title: "Care supervisor", role: "supervisor" },
-    { id: "judge-demo", name: "Hackathon judge", title: "Demo reviewer", role: "demo_judge" },
+    { id: "judge-demo", name: "Demo reviewer", title: "Technical reviewer", role: "demo_judge" },
   ];
   const orderedUsers = [...(users.length ? users : fallbackUsers)].sort(
     (first, second) => roleRank(first.role) - roleRank(second.role),
@@ -997,9 +997,9 @@ function ProofScreen({ evidence, health, loading }) {
     <div className="screen-layout">
       <div className="action-strip">
         <div>
-          <span className="eyebrow">Judge proof</span>
+          <span className="eyebrow">Technical proof</span>
           <h2>Memory lifecycle evidence</h2>
-          <p>Normal users never need this screen. It shows the exact redacted exchange between this backend and memory.</p>
+          <p>Care workers never need this screen. It shows the exact redacted exchange between this backend and memory.</p>
         </div>
         <div className="backend-badge">
           <strong>{backend?.name || "loading"}</strong>
@@ -1164,7 +1164,7 @@ function loginPromiseForRole(role) {
       night_caregiver: "Sees assigned night-shift patients and note capture only.",
       morning_lead: "Sees assigned morning handoffs and follow-up questions.",
       supervisor: "Sees assignment controls, review queue, and cleanup tools.",
-      demo_judge: "Can inspect all screens and proof traces for the demo.",
+      demo_judge: "Can inspect all workspaces and proof traces for the demo.",
     }[role] || "Role-based workspace"
   );
 }

@@ -25,7 +25,7 @@ When Omar clicks generate handoff, the backend recalls Avery's case memory from 
 Omar then asks a follow-up: what changed after 3 AM? The app answers from saved memory and cites the remembered note.
 Rosa returns as supervisor. She can review the memory that will keep shaping future handoffs.
 When she marks a note important, that feedback is sent as an improve signal so future handoffs prioritize it.
-Finally, judge mode shows the proof: Cognee Cloud is active, Gemini is active, and the memory lifecycle includes remember, recall, improve, and forget traces with API keys redacted.
+Finally, proof mode shows the technical evidence: Cognee Cloud is active, Gemini is active, and the memory lifecycle includes remember, recall, improve, and forget traces with API keys redacted.
 The submission also declares AI usage: Codex helped build the product, Gemini is the runtime reasoning layer, and Cognee is the runtime memory layer."""
 
 
@@ -40,7 +40,7 @@ CAPTIONS = [
     ("08_morning_followup_answer.png", "Ask from memory", "A follow-up answer cites the remembered note."),
     ("09_supervisor_review_memory.png", "Supervisor review", "Rosa decides what should keep shaping handoffs."),
     ("10_supervisor_improve_memory.png", "Improve", "Important memory is promoted for future handoffs."),
-    ("11_judge_proof_top.png", "Proof mode", "Judges can see Cognee Cloud and Gemini are active."),
+    ("11_judge_proof_top.png", "Proof mode", "Reviewers can see Cognee Cloud and Gemini are active."),
     ("12_judge_proof_trace.png", "Backend-to-memory trace", "Memory calls are visible with secrets redacted."),
 ]
 

@@ -49,7 +49,7 @@ Cognee provides the persistent memory layer. Gemini provides reasoning over the 
 3. Morning lead generates the handoff without pasting that note again.
 4. Handoff cites the source note.
 5. Supervisor marks it important or removes stale context.
-6. Judge opens proof mode and sees the memory lifecycle traces.
+6. Demo reviewer opens proof mode and sees the memory lifecycle traces.
 
 ## Tech Stack
 

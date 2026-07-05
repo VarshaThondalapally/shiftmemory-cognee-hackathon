@@ -87,7 +87,7 @@ Output:
 - revised handoff;
 - improvement signal for Cognee.
 
-### Demo Judge Agent
+### Demo Reviewer Agent
 
 Input:
 

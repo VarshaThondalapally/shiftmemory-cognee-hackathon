@@ -78,7 +78,7 @@
 
       <section class="workflow-section" id="workflow">
         <div class="section-kicker">Submission demo flow</div>
-        <h2>Run the product like a care team, then inspect it like a judge.</h2>
+        <h2>Run the product like a care team, then inspect the technical proof.</h2>
         <div class="shift-timeline" aria-label="Shift handoff timeline">
           <article>
             <span>1. Supervisor</span>
@@ -96,7 +96,7 @@
             <p>Omar opens the morning workspace and gets a source-backed brief.</p>
           </article>
           <article>
-            <span>4. Judge proof</span>
+            <span>4. Technical proof</span>
             <h3>Verify memory</h3>
             <p>Proof mode shows redacted Cognee remember, recall, improve, and forget calls.</p>
           </article>
@@ -152,7 +152,7 @@
             <button class="active" type="button" data-role="night">Night caregiver</button>
             <button type="button" data-role="morning">Morning lead</button>
             <button type="button" data-role="supervisor">Supervisor</button>
-            <button type="button" data-role="judge">Proof mode</button>
+            <button type="button" data-role="proof">Proof mode</button>
           </div>
 
           <div class="demo-shell">
@@ -264,7 +264,7 @@
 
       <section class="docs-section" id="docs">
         <div class="section-kicker">Reviewer material</div>
-        <h2>For judges who want the architecture, tests, and operating model.</h2>
+        <h2>For reviewers who want the architecture, tests, and operating model.</h2>
         <div class="doc-links">
           <a href="docs/11_Final_Test_Report.md">
             <span>Final test report</span>
@@ -364,14 +364,14 @@
             </div>
           `,
         },
-        judge: {
+        proof: {
           label: "Proof mode",
           title: "The demo reviewer can inspect proof without seeing secrets.",
           copy:
             "The reviewer login can move across the preview screens and inspect redacted backend-to-Cognee calls, source ids, latencies, and lifecycle status.",
           memory: "Verified lifecycle: remember, recall, improve/cognify, forget.",
           html: `
-            <div class="auth-chip">Signed in as Hackathon judge</div>
+            <div class="auth-chip">Signed in as Demo reviewer</div>
             <div class="trace-row">
               <span>/api/v1/remember</span>
               <strong>200</strong>

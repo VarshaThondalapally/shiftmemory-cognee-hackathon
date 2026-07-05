@@ -11,7 +11,7 @@ The app gives each actor a separate workspace:
 - Night caregiver: records what changed during the shift.
 - Morning lead: generates a clean handoff and asks follow-up questions.
 - Supervisor: assigns workers to care recipients, reviews important or stale notes, and controls what remains in memory.
-- Hackathon judge: inspects the complete memory lifecycle and proof traces.
+- Demo reviewer: inspects the complete memory lifecycle and proof traces.
 
 ## Core User Story
 

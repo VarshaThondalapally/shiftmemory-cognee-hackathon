@@ -91,7 +91,7 @@ Demo beats:
 - Ask case question.
 - Improve with supervisor feedback.
 - Forget incorrect note.
-- Show judge memory trace.
+- Show technical proof trace.
 
 ## Slide 7: Best Use of Cognee
 
@@ -154,7 +154,7 @@ Use these claims only if implemented:
 
 - "Uses Cognee Cloud for persistent case memory."
 - "Implements remember, recall, improve, and forget."
-- "Includes judge trace proving Cognee operation usage."
+- "Includes technical trace proving Cognee operation usage."
 - "Uses source-backed generated handoffs."
 - "Uses synthetic data only."
 

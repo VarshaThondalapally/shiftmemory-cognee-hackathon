@@ -16,7 +16,7 @@ Deliverables:
 - Q&A over case memory.
 - Feedback that marks memory high-signal.
 - Forget action that removes memory from future handoffs.
-- Judge proof view that proves each lifecycle operation.
+- Technical proof view that proves each lifecycle operation.
 
 Acceptance checks:
 
@@ -42,7 +42,7 @@ Deliverables:
 - Gemini note understanding before memory write.
 - Gemini recall planning before Cognee recall.
 - Gemini handoff writing from only verified Cognee-returned sources.
-- Judge trace showing Cognee operation IDs, source IDs, and latency.
+- Technical trace showing Cognee operation IDs, source IDs, and latency.
 - Backend verifier that rejects unsourced generated claims.
 
 Acceptance checks:
@@ -61,7 +61,7 @@ Acceptance checks:
 Use Cognee balance for actions that prove memory:
 
 - add note;
-- reset demo seed data before a judge run;
+- reset demo seed data before a demo run;
 - generate handoff;
 - ask case question;
 - mark important;

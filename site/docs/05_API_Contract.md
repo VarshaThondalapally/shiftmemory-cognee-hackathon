@@ -38,7 +38,7 @@ X-Request-ID: <uuid>          # optional from client, generated if missing
 - `org_admin`: manage org settings, users, all cases.
 - `supervisor`: review handoffs, mark important, forget case memories.
 - `worker`: add notes, generate handoffs, ask questions for assigned cases.
-- `judge_demo`: read demo cases and memory traces only.
+- demo reviewer: read demo cases and memory traces only.
 
 ## Endpoints
 
@@ -359,7 +359,7 @@ Response:
 Visibility:
 
 - hidden from normal users by default;
-- visible in judge demo mode and admin mode.
+- visible in demo reviewer mode and admin mode.
 
 ## Rate Limits
 

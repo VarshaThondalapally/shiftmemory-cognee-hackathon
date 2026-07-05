@@ -52,7 +52,7 @@ try {
   await page.evaluate(() => window.localStorage.clear());
   await page.reload({ waitUntil: "networkidle2" });
   await waitForText(page, "Each person opens the workspace their role allows", 30000);
-  await clickText(page, "button.login-card", "Hackathon judge");
+  await clickText(page, "button.login-card", "Demo reviewer");
   await waitForText(page, "Memory lifecycle evidence", 60000);
   await waitForText(page, "cognee-cloud", 60000);
   await page.evaluate(() => window.scrollTo(0, 520));

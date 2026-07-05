@@ -167,7 +167,7 @@ Controls:
 - generation quotas;
 - file upload caps;
 - Cognee balance alert;
-- disable judge mode in production.
+- disable proof mode in production.
 
 ## Authentication and Authorization
 
@@ -232,7 +232,7 @@ Before demo:
 - Deleted note no longer appears in generated handoff.
 - Uploaded prompt-injection note cannot override system behavior.
 - Handoff refuses to answer when memory is insufficient.
-- Judge trace hides raw secrets.
+- Technical trace hides raw secrets.
 - Synthetic data warning visible in demo docs.
 
 ## Compliance Note

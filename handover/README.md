@@ -2,7 +2,7 @@
 
 This folder is the submission handover for the Cognee hackathon project.
 
-Use it as the single packet for judges, teammates, or a future engineer who needs to understand what was built, how to run it, how Cognee is used, and where AI assistance was involved.
+Use it as the single packet for reviewers, teammates, or a future engineer who needs to understand what was built, how to run it, how Cognee is used, and where AI assistance was involved.
 
 ## Bundle Contents
 
@@ -21,7 +21,7 @@ The product proves that Cognee can act as the durable memory layer behind a real
 - A night caregiver saves only what changed.
 - A morning lead receives a source-backed handoff without pasting prior context.
 - A supervisor can prioritize or remove memory so future handoffs improve.
-- A judge can inspect the memory lifecycle through proof traces.
+- A reviewer can inspect the memory lifecycle through proof traces.
 
 ## Current Submission State
 

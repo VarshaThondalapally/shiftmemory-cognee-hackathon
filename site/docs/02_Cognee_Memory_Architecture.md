@@ -36,7 +36,7 @@ flowchart LR
 
 Use one Cognee dataset per remembered item for the hackathon MVP, grouped by a case prefix.
 
-This is intentionally simple for judge clarity: when a note is forgotten, the app can call Cognee forget for that note's dataset and prove the note stops participating in future recall.
+This is intentionally simple for reviewer clarity: when a note is forgotten, the app can call Cognee forget for that note's dataset and prove the note stops participating in future recall.
 
 Dataset naming:
 
@@ -142,7 +142,7 @@ Triggered by:
 - `POST /v1/cases/{case_id}/handoff`
 - `POST /v1/cases/{case_id}/ask`
 - `GET /v1/cases/{case_id}/timeline`
-- judge memory trace view.
+- technical proof trace view.
 
 Recall patterns:
 
@@ -226,9 +226,9 @@ Cognee returns memory context. The LLM then creates a structured handoff from on
 }
 ```
 
-## Judge Memory Trace
+## Technical Proof Trace
 
-The normal user interface should hide Cognee implementation details. The judge mode should show:
+The normal user interface should hide Cognee implementation details. The proof mode should show:
 
 - operation type: remember, recall, improve, forget;
 - dataset name;

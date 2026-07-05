@@ -345,7 +345,7 @@ class LocalMemoryService:
             "balance_policy": [
                 "Use Cloud calls only on add note, generate handoff, ask question, mark important, and remove note.",
                 "Do not spend Cognee balance on page refresh, UI navigation, or repeated polling.",
-                "Use two small demo cases so judges see the full lifecycle without burning credits.",
+                "Use two small demo cases so reviewers see the full lifecycle without burning credits.",
             ],
             "communication_timeline": self._communication_timeline(traces),
             "recent_traces": list(reversed(traces[-12:])),

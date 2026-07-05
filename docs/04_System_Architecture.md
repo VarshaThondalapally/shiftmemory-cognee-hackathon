@@ -22,7 +22,7 @@ flowchart TB
 Frontend:
 
 - React or Next.js.
-- Case dashboard, note composer, handoff view, Q&A view, judge trace view.
+- Case dashboard, note composer, handoff view, Q&A view, technical trace view.
 
 Backend:
 
@@ -331,6 +331,6 @@ Next scale target:
 2. Keep Cognee API keys on the backend only.
 3. Use one Cognee dataset per case for MVP isolation.
 4. Require source references in every generated handoff.
-5. Add judge trace mode to prove memory lifecycle usage.
+5. Add technical trace mode to prove memory lifecycle usage.
 6. Treat file and note content as untrusted data.
 7. Build deletion and retention before public demo.

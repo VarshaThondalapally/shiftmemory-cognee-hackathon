@@ -18,13 +18,13 @@ Submit the public GitHub Pages landing page as the deployed link, the GitHub rep
 
 The current MP4 is a real product walkthrough captured from the running React app against the local FastAPI backend with Cognee Cloud and Gemini active. It is not just a slide explainer.
 
-Do not submit `localhost` as the deployed product. Localhost is useful for recording and local judging walkthroughs, but external judges cannot open it.
+Do not submit `localhost` as the deployed product. Localhost is useful for recording and local judging walkthroughs, but external reviewers cannot open it.
 
 ## Why We Are Not Rushing A Public Backend
 
 The full product requires a hosted React frontend and a hosted FastAPI backend with Cognee and Gemini secrets in server environment variables.
 
-GitHub Pages can host the landing page, but it cannot host the backend. A rushed live backend risks CORS failures, exposed keys, slow memory calls, and an unreliable judge experience.
+GitHub Pages can host the landing page, but it cannot host the backend. A rushed live backend risks CORS failures, exposed keys, slow memory calls, and an unreliable reviewer experience.
 
 For the current submission window, the strongest path is:
 

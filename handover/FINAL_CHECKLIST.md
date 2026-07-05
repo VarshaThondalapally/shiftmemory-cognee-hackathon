@@ -9,7 +9,7 @@
 - Role-based access control added.
 - Assigned care-recipient filtering added.
 - Supervisor assignment dashboard added.
-- Night caregiver, morning lead, supervisor, and judge workspaces separated.
+- Night caregiver, morning lead, supervisor, and proof workspaces separated.
 - Cognee Cloud final-mode configuration added.
 - Gemini final-mode configuration added.
 - Proof mode added for memory lifecycle inspection.
@@ -26,7 +26,7 @@
 - Supervisor login opens assignment dashboard.
 - Night caregiver sees assigned patients only.
 - Morning lead sees handoff workflow only.
-- Judge mode can inspect all screens and proof mode.
+- Demo reviewer can inspect all workspaces and proof mode.
 
 ## Needs Final Human Decision
 
