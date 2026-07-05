@@ -486,7 +486,12 @@ class CogneeMemoryService(LocalMemoryService):
         self.strict = strict
         self.dataset_prefix = dataset_prefix
         self.tenant_id = tenant_id
-        self.timeout = httpx.Timeout(40.0)
+        try:
+            timeout_seconds = max(10.0, float(os.getenv("COGNEE_TIMEOUT_SECONDS", "120")))
+        except ValueError:
+            timeout_seconds = 120.0
+        self.timeout = httpx.Timeout(timeout_seconds)
+        self.timeout_seconds = timeout_seconds
 
     def backend_status(self) -> dict[str, Any]:
         return {
@@ -497,6 +502,7 @@ class CogneeMemoryService(LocalMemoryService):
             "strict": self.strict,
             "dataset_prefix": self.dataset_prefix,
             "tenant_configured": bool(self.tenant_id),
+            "timeout_seconds": self.timeout_seconds,
             "message": "Cognee Cloud is the memory layer. Local JSON is only the product workflow cache.",
         }
 
