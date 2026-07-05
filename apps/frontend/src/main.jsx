@@ -1,58 +1,93 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CheckCircle2, MessageSquareText, Plus, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
+import {
+  BadgeCheck,
+  ClipboardList,
+  Eye,
+  MessageSquareText,
+  Moon,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  Trash2,
+} from "lucide-react";
 import "./styles.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+const screens = [
+  { id: "handoff", label: "Morning", icon: ClipboardList },
+  { id: "notes", label: "Night Notes", icon: Moon },
+  { id: "ask", label: "Ask", icon: Search },
+  { id: "review", label: "Review", icon: BadgeCheck },
+  { id: "proof", label: "Proof", icon: Eye },
+];
 
 function App() {
   const [cases, setCases] = useState([]);
   const [caseId, setCaseId] = useState("resident-avery");
   const [caseData, setCaseData] = useState(null);
   const [handoff, setHandoff] = useState(null);
-  const [traces, setTraces] = useState([]);
+  const [handoffSources, setHandoffSources] = useState([]);
+  const [evidence, setEvidence] = useState(null);
+  const [health, setHealth] = useState(null);
+  const [view, setView] = useState("handoff");
   const [noteText, setNoteText] = useState("");
   const [noteType, setNoteType] = useState("shift");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [feedback, setFeedback] = useState("");
+  const [question, setQuestion] = useState("What should I tell the family this morning?");
+  const [answer, setAnswer] = useState(null);
+  const [answerSources, setAnswerSources] = useState([]);
+  const [feedback, setFeedback] = useState("Prioritize this in the next handoff.");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   const memories = caseData?.memories || [];
+  const currentCase = cases.find((item) => item.id === caseId);
   const importantCount = useMemo(() => memories.filter((item) => item.important).length, [memories]);
+  const reviewCount = useMemo(() => memories.filter((item) => item.type === "review").length, [memories]);
+  const newestNotes = memories.slice(0, 4);
 
   async function api(path, options = {}) {
-    const res = await fetch(`${API_URL}${path}`, {
+    const response = await fetch(`${API_URL}${path}`, {
       headers: { "Content-Type": "application/json" },
       ...options,
     });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "Request failed");
+    }
+    return response.json();
   }
 
   async function loadAll() {
-    const [caseList, selectedCase, traceList] = await Promise.all([
+    const [healthResult, caseList, selectedCase, evidenceResult] = await Promise.all([
+      api("/healthz"),
       api("/v1/cases"),
       api(`/v1/cases/${caseId}`),
-      api(`/v1/cases/${caseId}/trace`),
+      api(`/v1/cases/${caseId}/evidence`),
     ]);
+    setHealth(healthResult);
     setCases(caseList.cases);
     setCaseData(selectedCase);
-    setTraces(traceList.traces);
+    setEvidence(evidenceResult);
   }
 
   async function run(action) {
     setBusy(true);
+    setError("");
     try {
       await action();
       await loadAll();
+    } catch (err) {
+      setError(cleanError(err));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    loadAll();
+    run(async () => {});
   }, [caseId]);
 
   async function addNote(event) {
@@ -61,9 +96,10 @@ function App() {
     await run(async () => {
       await api(`/v1/cases/${caseId}/notes`, {
         method: "POST",
-        body: JSON.stringify({ type: noteType, text: noteText, source: "local shift note" }),
+        body: JSON.stringify({ type: noteType, text: noteText, source: "night worker note" }),
       });
       setNoteText("");
+      setView("handoff");
     });
   }
 
@@ -71,21 +107,29 @@ function App() {
     await run(async () => {
       const data = await api(`/v1/cases/${caseId}/handoff`, {
         method: "POST",
-        body: JSON.stringify({ focus: "morning handoff risks tasks family preferences" }),
+        body: JSON.stringify({
+          focus: "morning handoff before 9 family risks tasks breakfast preference review",
+        }),
       });
       setHandoff(data.handoff);
+      setHandoffSources(data.sources);
+      setView("handoff");
     });
   }
 
-  async function askQuestion(event) {
-    event.preventDefault();
-    if (!question.trim()) return;
+  async function askQuestion(event, preset) {
+    event?.preventDefault();
+    const text = preset || question;
+    if (!text.trim()) return;
     await run(async () => {
       const data = await api(`/v1/cases/${caseId}/ask`, {
         method: "POST",
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question: text }),
       });
+      setQuestion(text);
       setAnswer(data.answer);
+      setAnswerSources(data.sources);
+      setView("ask");
     });
   }
 
@@ -95,35 +139,43 @@ function App() {
         method: "POST",
         body: JSON.stringify({ memory_id: memoryId, feedback }),
       });
-      setFeedback("");
+      setFeedback("Prioritize this in the next handoff.");
     });
   }
 
   async function forget(memoryId) {
     await run(async () => {
       await api(`/v1/cases/${caseId}/memories/${memoryId}`, { method: "DELETE" });
-      if (handoff) await generateHandoff();
+      setHandoff(null);
+      setHandoffSources([]);
+      setAnswer(null);
+      setAnswerSources([]);
+    });
+  }
+
+  async function resetDemo() {
+    await run(async () => {
+      await api("/v1/demo/reset", { method: "POST" });
+      setHandoff(null);
+      setHandoffSources([]);
+      setAnswer(null);
+      setAnswerSources([]);
+      setView("handoff");
     });
   }
 
   return (
     <div className="app">
-      <header className="shell-header">
-        <div>
-          <span className="eyebrow">Shift handoff workspace</span>
-          <h1>ShiftMemory</h1>
-          <p>One shared case history for notes, handoffs, questions, corrections, and removal.</p>
+      <header className="hero">
+        <div className="hero-copy">
+          <span className="eyebrow">{caseData?.team || "Home care handoff"}</span>
+          <h1>Morning handoff for {caseData?.name || "Avery"}</h1>
+          <p>{caseData?.guide?.problem || "Morning staff needs the few things that changed overnight."}</p>
         </div>
-        <div className="status-pill">
-          <ShieldCheck size={17} />
-          Demo workspace
-        </div>
-      </header>
 
-      <main className="workspace">
-        <aside className="side-panel">
+        <div className="case-switcher">
           <label>
-            Case
+            Current resident
             <select value={caseId} onChange={(event) => setCaseId(event.target.value)}>
               {cases.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -132,157 +184,386 @@ function App() {
               ))}
             </select>
           </label>
+          <button className="quiet-button" type="button" onClick={resetDemo} disabled={busy} title="Reset demo notes">
+            <RotateCcw size={17} />
+            Reset
+          </button>
+        </div>
+      </header>
 
-          <div className="metrics">
-            <div>
-              <strong>{memories.length}</strong>
-              <span>notes</span>
-            </div>
-            <div>
-              <strong>{importantCount}</strong>
-              <span>important</span>
+      <nav className="screen-tabs" aria-label="Demo screens">
+        {screens.map((screen) => {
+          const Icon = screen.icon;
+          return (
+            <button
+              key={screen.id}
+              className={view === screen.id ? "tab active" : "tab"}
+              type="button"
+              onClick={() => setView(screen.id)}
+            >
+              <Icon size={17} />
+              {screen.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {error && <div className="error-banner">{error}</div>}
+
+      <main className="workspace">
+        <aside className="context-rail">
+          <div className="case-summary">
+            <span className="eyebrow">What changed overnight</span>
+            <h2>{currentCase?.memory_count || memories.length} remembered notes</h2>
+            <div className="summary-stats">
+              <span>{importantCount} important</span>
+              <span>{reviewCount} to review</span>
             </div>
           </div>
 
-          <form className="composer" onSubmit={addNote}>
-            <label>
-              Type
-              <select value={noteType} onChange={(event) => setNoteType(event.target.value)}>
-                <option value="shift">Shift note</option>
-                <option value="risk">Risk</option>
-                <option value="task">Task</option>
-                <option value="family">Family</option>
-                <option value="preference">Preference</option>
-              </select>
-            </label>
-            <label>
-              New shift note
-              <textarea
-                value={noteText}
-                onChange={(event) => setNoteText(event.target.value)}
-                placeholder="Example: Family asked for a callback before 10."
-              />
-            </label>
-            <button type="submit" disabled={busy}>
-              <Plus size={17} />
-              Add note
-            </button>
-          </form>
-        </aside>
-
-        <section className="main-panel">
-          <div className="panel-head">
-            <div>
-              <span className="eyebrow">Current case</span>
-              <h2>{caseData?.name || "Loading"}</h2>
-            </div>
-            <button className="secondary" onClick={generateHandoff} disabled={busy}>
-              <RefreshCw size={17} />
-              Generate handoff
-            </button>
-          </div>
-
-          <section className="handoff">
-            <h3>Morning handoff</h3>
-            {!handoff && <p className="empty">Generate a handoff from the notes on this case.</p>}
-            {handoff && (
-              <div className="handoff-grid">
-                <HandoffList title="Start here" items={handoff.start_here} />
-                <HandoffList title="Watch" items={handoff.watch} />
-                <HandoffList title="Tasks" items={handoff.tasks} />
-                <HandoffList title="Preferences" items={handoff.preferences} />
-              </div>
-            )}
-          </section>
-
-          <section className="memory-list">
-            <h3>Shift notes</h3>
-            {memories.map((memory) => (
-              <article key={memory.id} className={memory.important ? "memory important" : "memory"}>
+          <div className="note-stream">
+            {newestNotes.map((memory) => (
+              <article key={memory.id} className="rail-note">
+                <span className={memory.important ? "dot hot" : "dot"} />
                 <div>
-                  <span className="tag">{memory.type}</span>
-                  {memory.important && <span className="tag important-tag">important</span>}
-                </div>
-                <p>{memory.text}</p>
-                <small>{memory.source}</small>
-                <div className="memory-actions">
-                  <button className="icon-action" onClick={() => improve(memory.id)} title="Mark important">
-                    <CheckCircle2 size={16} />
-                  </button>
-                  <button className="icon-action danger" onClick={() => forget(memory.id)} title="Remove note">
-                    <Trash2 size={16} />
-                  </button>
+                  <strong>{labelForType(memory.type)}</strong>
+                  <p>{memory.text}</p>
                 </div>
               </article>
             ))}
-          </section>
-        </section>
-
-        <aside className="right-panel">
-          <form className="ask-box" onSubmit={askQuestion}>
-            <h3>Ask this case</h3>
-            <textarea
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              placeholder="What should morning shift know about family requests?"
-            />
-            <button type="submit" disabled={busy}>
-              <MessageSquareText size={17} />
-              Answer from notes
-            </button>
-            {answer && <p className="answer">{answer}</p>}
-          </form>
-
-          <label className="feedback-box">
-            Supervisor note
-            <textarea
-              value={feedback}
-              onChange={(event) => setFeedback(event.target.value)}
-              placeholder="Example: prioritize family calls in the next handoff"
-            />
-          </label>
-
-          <section className="trace">
-            <h3>Activity log</h3>
-            {traces.slice(0, 8).map((trace) => (
-              <div key={trace.id} className="trace-row">
-                <strong>{operationLabel(trace.operation)}</strong>
-                <span>{trace.memory_ids.length} note(s)</span>
-                <small>{trace.latency_ms} ms</small>
-              </div>
-            ))}
-          </section>
+          </div>
         </aside>
+
+        <section className="stage">
+          {view === "handoff" && (
+            <HandoffScreen
+              busy={busy}
+              handoff={handoff}
+              sources={handoffSources}
+              onGenerate={generateHandoff}
+              onAskFamily={(questionText) => askQuestion(null, questionText)}
+            />
+          )}
+          {view === "notes" && (
+            <NotesScreen
+              busy={busy}
+              memories={memories}
+              noteText={noteText}
+              noteType={noteType}
+              setNoteText={setNoteText}
+              setNoteType={setNoteType}
+              onSubmit={addNote}
+            />
+          )}
+          {view === "ask" && (
+            <AskScreen
+              busy={busy}
+              question={question}
+              answer={answer}
+              sources={answerSources}
+              setQuestion={setQuestion}
+              onSubmit={askQuestion}
+              onPreset={(preset) => askQuestion(null, preset)}
+            />
+          )}
+          {view === "review" && (
+            <ReviewScreen
+              busy={busy}
+              memories={memories}
+              feedback={feedback}
+              setFeedback={setFeedback}
+              onImprove={improve}
+              onForget={forget}
+            />
+          )}
+          {view === "proof" && <ProofScreen evidence={evidence} health={health} />}
+        </section>
       </main>
     </div>
   );
 }
 
-function HandoffList({ title, items }) {
+function HandoffScreen({ busy, handoff, sources, onGenerate, onAskFamily }) {
   return (
-    <div className="handoff-list">
-      <h4>{title}</h4>
-      {items?.length ? (
-        items.map((item, index) => (
-          <p key={`${title}-${index}`}>
-            {item.text}
-            {item.source_ids?.length ? <span>{item.source_ids.length} source note(s)</span> : null}
-          </p>
-        ))
+    <div className="screen-layout">
+      <div className="action-strip">
+        <div>
+          <span className="eyebrow">First action</span>
+          <h2>Generate today&apos;s handoff</h2>
+          <p>The morning worker clicks once and gets the night shift context back without pasting notes.</p>
+        </div>
+        <button className="primary-action" type="button" onClick={onGenerate} disabled={busy}>
+          <RefreshCw size={18} />
+          Generate handoff
+        </button>
+      </div>
+
+      {!handoff ? (
+        <div className="empty-state">
+          <ClipboardList size={38} />
+          <h3>No handoff generated yet</h3>
+          <p>Click generate to turn the remembered night notes into a morning checklist.</p>
+        </div>
       ) : (
-        <p className="empty">No matching notes yet.</p>
+        <>
+          <div className="handoff-board">
+            <HandoffColumn title="Before 9 AM" items={handoff.before_9} accent="urgent" />
+            <HandoffColumn title="Watch Today" items={handoff.watch_today} accent="watch" />
+            <HandoffColumn title="Care Preference" items={handoff.care_preferences} accent="calm" />
+            <HandoffColumn title="Later Today" items={handoff.later_today} accent="task" />
+            <HandoffColumn title="Review" items={handoff.review_with_supervisor} accent="review" />
+          </div>
+          <div className="handoff-footer">
+            <p>{handoff.safety_note}</p>
+            <button
+              className="quiet-button"
+              type="button"
+              onClick={() => onAskFamily("What should I tell the family this morning?")}
+            >
+              <MessageSquareText size={17} />
+              Ask about family update
+            </button>
+          </div>
+          <SourceList title="Sources used" sources={sources} />
+        </>
       )}
     </div>
   );
 }
 
-function operationLabel(operation) {
-  return {
-    remember: "note added",
-    recall: "handoff checked",
-    improve: "marked important",
-    forget: "note removed",
-  }[operation] || operation;
+function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteType, onSubmit }) {
+  return (
+    <div className="screen-layout two-column">
+      <form className="note-form" onSubmit={onSubmit}>
+        <span className="eyebrow">Night worker</span>
+        <h2>Add what changed</h2>
+        <p>One short note is enough. The morning worker should not need to read a whole chat thread.</p>
+        <label>
+          Note type
+          <select value={noteType} onChange={(event) => setNoteType(event.target.value)}>
+            <option value="shift">General</option>
+            <option value="risk">Watch today</option>
+            <option value="task">Task</option>
+            <option value="family">Family</option>
+            <option value="preference">Preference</option>
+            <option value="review">Needs review</option>
+          </select>
+        </label>
+        <label>
+          Note
+          <textarea
+            value={noteText}
+            onChange={(event) => setNoteText(event.target.value)}
+            placeholder="Example: Family asked for a callback before 9 AM."
+          />
+        </label>
+        <button className="primary-action" type="submit" disabled={busy}>
+          <Plus size={18} />
+          Add note
+        </button>
+      </form>
+
+      <div className="timeline">
+        <span className="eyebrow">Current memory</span>
+        <h2>Notes available for handoff</h2>
+        {memories.map((memory) => (
+          <article key={memory.id} className="timeline-item">
+            <span className={memory.important ? "timeline-pin important" : "timeline-pin"} />
+            <div>
+              <strong>{labelForType(memory.type)}</strong>
+              <p>{memory.text}</p>
+              <small>{memory.source}</small>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AskScreen({ busy, question, answer, sources, setQuestion, onSubmit, onPreset }) {
+  return (
+    <div className="screen-layout">
+      <form className="ask-form" onSubmit={onSubmit}>
+        <span className="eyebrow">Morning worker</span>
+        <h2>Ask a question from the notes</h2>
+        <textarea value={question} onChange={(event) => setQuestion(event.target.value)} />
+        <div className="preset-row">
+          <button type="button" className="quiet-button" onClick={() => onPreset("What should I tell the family this morning?")}>
+            Family update
+          </button>
+          <button type="button" className="quiet-button" onClick={() => onPreset("What should I watch today?")}>
+            Watch item
+          </button>
+          <button type="button" className="quiet-button" onClick={() => onPreset("What changed about breakfast?")}>
+            Breakfast
+          </button>
+        </div>
+        <button className="primary-action" type="submit" disabled={busy}>
+          <MessageSquareText size={18} />
+          Answer from notes
+        </button>
+      </form>
+
+      {answer && (
+        <section className="answer-panel">
+          <span className="eyebrow">Answer</span>
+          <p>{answer}</p>
+          <SourceList title="Why this answer" sources={sources} />
+        </section>
+      )}
+    </div>
+  );
+}
+
+function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForget }) {
+  return (
+    <div className="screen-layout">
+      <div className="action-strip">
+        <div>
+          <span className="eyebrow">Supervisor review</span>
+          <h2>Prioritize or remove notes</h2>
+          <p>This is where the system learns what matters and stops using notes that are wrong.</p>
+        </div>
+        <label className="feedback-input">
+          Feedback
+          <input value={feedback} onChange={(event) => setFeedback(event.target.value)} />
+        </label>
+      </div>
+
+      <div className="review-list">
+        {memories.map((memory) => (
+          <article key={memory.id} className={memory.important ? "review-item important" : "review-item"}>
+            <div>
+              <span className="type-chip">{labelForType(memory.type)}</span>
+              {memory.important && <span className="type-chip priority">important</span>}
+              <p>{memory.text}</p>
+              <small>{memory.source}</small>
+            </div>
+            <div className="review-actions">
+              <button type="button" className="quiet-button" onClick={() => onImprove(memory.id)} disabled={busy}>
+                <BadgeCheck size={17} />
+                Prioritize
+              </button>
+              <button type="button" className="danger-button" onClick={() => onForget(memory.id)} disabled={busy}>
+                <Trash2 size={17} />
+                Remove
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProofScreen({ evidence, health }) {
+  const backend = evidence?.backend || health?.memory;
+  return (
+    <div className="screen-layout">
+      <div className="action-strip">
+        <div>
+          <span className="eyebrow">Judge proof</span>
+          <h2>Memory lifecycle evidence</h2>
+          <p>Normal users never need this screen. It exists to prove what the memory layer did.</p>
+        </div>
+        <div className="backend-badge">
+          <strong>{backend?.name || "loading"}</strong>
+          <span>{backend?.phase || "memory layer"}</span>
+        </div>
+      </div>
+
+      <div className="proof-grid">
+        {evidence?.proof_steps?.map((step) => (
+          <article key={step.operation} className={step.complete ? "proof-step complete" : "proof-step"}>
+            <span>{step.operation}</span>
+            <h3>{step.label}</h3>
+            <p>{step.meaning}</p>
+          </article>
+        ))}
+      </div>
+
+      <section className="trace-table">
+        <div className="trace-head">
+          <span>Operation</span>
+          <span>Source IDs</span>
+          <span>Time</span>
+        </div>
+        {evidence?.recent_traces?.map((trace) => (
+          <div className="trace-row" key={trace.id}>
+            <strong>{trace.operation}</strong>
+            <span>{trace.memory_ids.join(", ") || "none"}</span>
+            <small>{trace.latency_ms} ms</small>
+          </div>
+        ))}
+      </section>
+
+      <section className="balance-note">
+        <h3>How the Cognee balance is used</h3>
+        {evidence?.balance_policy?.map((item) => (
+          <p key={item}>{item}</p>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function HandoffColumn({ title, items, accent }) {
+  return (
+    <section className={`handoff-column ${accent}`}>
+      <h3>{title}</h3>
+      {items?.length ? (
+        items.map((item, index) => (
+          <article key={`${title}-${index}`}>
+            <p>{item.text}</p>
+            {item.source_ids?.length ? <small>Source: {item.source_ids.join(", ")}</small> : null}
+          </article>
+        ))
+      ) : (
+        <p className="muted">No note found.</p>
+      )}
+    </section>
+  );
+}
+
+function SourceList({ title, sources }) {
+  if (!sources?.length) return null;
+  return (
+    <section className="source-list">
+      <h3>{title}</h3>
+      {sources.slice(0, 5).map((source) => (
+        <article key={source.id}>
+          <strong>{labelForType(source.type)}</strong>
+          <p>{source.text}</p>
+          <small>{source.source}</small>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function labelForType(type) {
+  return (
+    {
+      family: "Family",
+      risk: "Watch",
+      task: "Task",
+      preference: "Preference",
+      review: "Review",
+      feedback: "Feedback",
+      shift: "General",
+    }[type] || "Note"
+  );
+}
+
+function cleanError(err) {
+  const raw = err?.message || String(err);
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed.detail || raw;
+  } catch {
+    return raw;
+  }
 }
 
 createRoot(document.getElementById("root")).render(<App />);

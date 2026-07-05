@@ -1,32 +1,33 @@
-# ShiftMemory
+# Caregiver Handoff Memory Demo
 
-ShiftMemory is a shift handoff product with a Cognee-shaped memory lifecycle. The hackathon demo domain is caregiving operations, but the product category is broader: never-forget workflows where agents and workers need durable, scoped, correctable memory across sessions.
+A caregiver finishes a night shift. They leave a few small but important notes: family asked for an update, the resident was restless, breakfast preference changed, and one old note is wrong.
 
-## What This Repo Contains
+Morning staff opens the app and clicks one button. The app generates a clean handoff from remembered notes, cites the source notes, lets a supervisor prioritize important information, and removes stale notes from future answers.
 
-- `apps/backend/`: FastAPI local MVP API.
-- `apps/frontend/`: React local MVP app.
-- `docs/`: engineering packet and build plan.
-- `site/`: GitHub Pages-ready microsite.
-- `site/demo.html`: visual workflow demo.
-- `.github/workflows/pages.yml`: GitHub Pages deployment workflow.
+That is the hackathon use case: a memory-backed handoff assistant for teams where missing one small note creates confusion in the next shift.
 
-## Core Product Claim
+## What The Demo Proves
 
-Generic LLMs can summarize what a user pastes into a prompt. ShiftMemory uses Cognee so the product can remember, recall, improve, and forget operational context across workers, sessions, and agent surfaces.
+- Add a night note.
+- Refresh or restart the app.
+- Generate the morning handoff without pasting context again.
+- Ask a question like "What should I tell the family?"
+- Mark a note important and see future handoffs prioritize it.
+- Remove a wrong note and confirm it no longer appears.
+- Open the proof screen to show the memory lifecycle.
 
-## Cognee Usage
+## How Cognee Is Used
 
-- `remember`: shift notes, uploaded files, confirmed handoffs, task events, and supervisor decisions.
-- `recall`: handoffs, case Q&A, timelines, and judge trace proof.
-- `improve`: supervisor corrections and importance feedback.
-- `forget`: stale, incorrect, sensitive, or expired memory.
+Cognee is the backend memory layer, not an end-user feature.
 
-The MVP should use Cognee Cloud from the backend only. The browser must never receive Cognee or LLM API keys.
+- `remember`: night notes and supervisor feedback are written as durable memory.
+- `recall`: handoffs and case questions retrieve remembered context.
+- `improve`: reviewer feedback is written back so future outputs prioritize better context.
+- `forget`: removed notes are deleted from future recall.
 
-## Phase 1 Local MVP
+The browser never receives Cognee or LLM keys. The frontend talks only to the FastAPI backend.
 
-Phase 1 is now scaffolded as a local app. It uses a local memory adapter with the same lifecycle we will connect to Cognee in Phase 2.
+## Run Locally
 
 Backend:
 
@@ -57,61 +58,47 @@ Shortcut after dependencies are installed:
 .\scripts\dev.ps1
 ```
 
-## Phase 2 Cognee MVP
+## Use Cognee Cloud
 
-Phase 2 replaces the local memory adapter with Cognee Cloud calls while keeping the same frontend and API shape.
+Use local mode while designing the UI. Use Cognee mode for the final hackathon proof run.
 
-Required backend-only environment:
+Backend-only `.env`:
 
 ```text
 MEMORY_BACKEND=cognee
-COGNEE_BASE_URL=<your-cognee-cloud-url>
-COGNEE_API_KEY=<your-cognee-key>
+COGNEE_BASE_URL=https://your-tenant.aws.cognee.ai
+COGNEE_API_KEY=your_key
+COGNEE_STRICT=true
+COGNEE_DATASET_PREFIX=handoff-demo
 ```
 
-See `docs/10_PHASE_1_AND_2_BUILD_PLAN.md`.
+Use the hackathon Cognee balance only for lifecycle actions: add note, generate handoff, ask question, prioritize, remove, and demo reset. Do not spend it on page refreshes or UI navigation.
 
-## Local Preview
+## Smoke Test
 
-Open:
+```powershell
+cd apps/backend
+.\.venv\Scripts\python.exe ..\..\scripts\smoke_product.py
+```
+
+Expected output:
 
 ```text
-site/index.html
+PASS: handoff memory demo lifecycle works end to end
 ```
 
-The current demo is:
+## Repo Structure
 
-```text
-site/demo.html
-```
+- `apps/backend/`: FastAPI backend and memory adapters.
+- `apps/frontend/`: React product demo.
+- `scripts/smoke_product.py`: end-to-end demo lifecycle test.
+- `docs/`: architecture, security, SRE, and submission docs.
+- `site/`: GitHub Pages microsite.
 
-## GitHub Pages
+## Boundaries
 
-After this repo is pushed to GitHub:
-
-1. Go to repository settings.
-2. Open Pages.
-3. Set the source to GitHub Actions.
-4. Run the `Deploy GitHub Pages site` workflow.
-
-The workflow publishes the `site/` directory.
-
-## Important MVP Boundaries
-
-- Use synthetic demo data only.
-- Do not claim HIPAA compliance.
-- Do not provide medical advice, diagnosis, or treatment guidance.
-- Treat notes and uploaded files as untrusted input.
-- Require source references for generated handoffs.
-- Implement `forget` before public judging.
-
-## Best Starting Point
-
-Read:
-
-- `docs/00_INDEX.md`
-- `docs/10_PHASE_1_AND_2_BUILD_PLAN.md`
-- `docs/02_Cognee_Memory_Architecture.md`
-- `docs/06_Security_Threat_Model.md`
-- `docs/07_SRE_Operational_Readiness.md`
-- `docs/08_MVP_Roadmap_and_Acceptance.md`
+- Synthetic demo data only.
+- Not HIPAA compliant.
+- Not medical advice, diagnosis, or treatment guidance.
+- Notes are treated as untrusted input.
+- Source references are required for handoffs and answers.
