@@ -1,8 +1,10 @@
 # Demo Video Script
 
-Target length: 2:30 to 3:00.
+Target length: 1:50.
 
-## 0:00-0:15 Opening
+This is the script used for the replacement video. The visuals are actual screenshots captured from the running product, not mockups.
+
+## 0:00-0:10 Opening
 
 Voiceover:
 
@@ -10,11 +12,10 @@ Voiceover:
 
 On screen:
 
-- Project title.
-- One-line problem.
-- Cognee + Gemini + FastAPI + React stack.
+- Public landing page.
+- Product claim.
 
-## 0:15-0:35 Product Roles
+## 0:10-0:25 Product Roles
 
 Voiceover:
 
@@ -25,7 +26,7 @@ On screen:
 - Login screen.
 - Four demo roles.
 
-## 0:35-0:55 Supervisor Assignment
+## 0:25-0:40 Supervisor Assignment
 
 Voiceover:
 
@@ -37,7 +38,7 @@ On screen:
 - Assignment rows.
 - JWT/RBAC callout.
 
-## 0:55-1:20 Remember
+## 0:40-1:00 Remember
 
 Voiceover:
 
@@ -49,7 +50,7 @@ On screen:
 - Remember action.
 - Source ID callout.
 
-## 1:20-1:50 Recall
+## 1:00-1:20 Recall
 
 Voiceover:
 
@@ -61,7 +62,7 @@ On screen:
 - Before 9 AM, Watch Today, Preferences, Later Today.
 - Sources used.
 
-## 1:50-2:10 Ask Follow-Up
+## 1:20-1:32 Ask Follow-Up
 
 Voiceover:
 
@@ -72,7 +73,7 @@ On screen:
 - Follow-up question.
 - Source-backed answer.
 
-## 2:10-2:35 Improve And Forget
+## 1:32-1:42 Improve And Forget
 
 Voiceover:
 
@@ -84,7 +85,7 @@ On screen:
 - Keep important.
 - Remove stale.
 
-## 2:35-2:55 Proof Mode
+## 1:42-1:50 Proof Mode
 
 Voiceover:
 
@@ -96,14 +97,4 @@ On screen:
 - Cognee Cloud and Gemini badges.
 - Redacted communication trace.
 
-## 2:55-3:00 Close
-
-Voiceover:
-
-"The worker experience stays simple. Cognee is the memory layer that makes the handoff survive across shifts."
-
-On screen:
-
-- GitHub repo.
-- Landing page.
-- AI usage disclosure included.
+The close is included in proof mode: Codex is disclosed for development, Gemini is the reasoning layer, and Cognee is the memory layer.

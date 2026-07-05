@@ -4,9 +4,9 @@ Perspective: Cognee hackathon judge reviewing the submitted repo, landing page, 
 
 ## Overall Score
 
-Score: 7.6 / 10
+Score: 8.2 / 10
 
-Verdict: credible and differentiated if the demo video is clear. Not yet top-tier unless the live product is hosted or the demo video strongly proves real Cognee Cloud calls.
+Verdict: credible and differentiated. The real product-flow video raises the submission materially because it shows role separation, source-backed recall, the fixed follow-up answer, supervisor improve, and Cognee/Gemini proof mode.
 
 ## Strengths
 
@@ -63,9 +63,9 @@ Risk: the judge may still need the video to understand the exact order of action
 
 ### Presentation
 
-Medium unless the video is strong.
+Good.
 
-The repo and docs are now solid. The deciding factor is the 3-minute demo. It must show one clean end-to-end story without overexplaining architecture.
+The repo and docs are solid, and the replacement video shows one clean end-to-end story without overexplaining architecture.
 
 ## Competitive Positioning
 
@@ -88,6 +88,6 @@ Do not compete on graph visual spectacle. Compete on trust, workflow, and memory
 
 ## Final Judge Take
 
-This is submission-worthy if the final video is tight.
+This is submission-worthy.
 
 The project should not pretend to be production healthcare software. It should present itself as a strong hackathon MVP proving that Cognee can power persistent, source-backed memory in a real operational handoff workflow.

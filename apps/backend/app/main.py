@@ -152,7 +152,7 @@ def ask_case(case_id: str, payload: AskRequest, user: dict[str, Any] = Depends(c
             case_id,
             payload.question,
             limit=8,
-            search_type=None,
+            search_type="CHUNKS",
             intent={"bucket": None, "intent": "Answer a worker question from remembered notes."},
         )
     except KeyError:

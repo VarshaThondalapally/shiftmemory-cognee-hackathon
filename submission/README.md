@@ -16,6 +16,8 @@ This folder is the final submission packet for the Cognee hackathon.
 
 Submit the public GitHub Pages landing page as the deployed link, the GitHub repository as the source link, and the uploaded YouTube video as the live proof.
 
+The current MP4 is a real product walkthrough captured from the running React app against the local FastAPI backend with Cognee Cloud and Gemini active. It is not just a slide explainer.
+
 Do not submit `localhost` as the deployed product. Localhost is useful for recording and local judging walkthroughs, but external judges cannot open it.
 
 ## Why We Are Not Rushing A Public Backend

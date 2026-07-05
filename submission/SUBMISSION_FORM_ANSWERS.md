@@ -24,6 +24,8 @@ Note: the deployed link is the public landing/demo explainer. The full interacti
 
 Upload `submission/video/caregiver-handoff-memory-demo.mp4` to YouTube as unlisted, then paste the YouTube URL here.
 
+The video is a real walkthrough captured from the running product: supervisor assignment, night caregiver note capture, morning handoff recall, source-backed follow-up answer, supervisor improve action, and judge proof mode.
+
 ## Problem
 
 In home-care and assisted-living handoffs, important details are often small: a resident woke at 3 AM, a family member needs an update before breakfast, or an old preference should no longer be followed.

@@ -1,11 +1,13 @@
-This is Caregiver Handoff Memory, built for home-care and assisted-living teams.
-The problem is simple: the most important shift details are often small. A resident woke after 3 AM, a family member needs an update, or an old preference should stop appearing.
-The product is not one shared notes screen. Each person gets their own workspace. The supervisor assigns shifts, the night caregiver records what changed, the morning lead receives the handoff, and proof mode shows what the memory layer did.
-First, the supervisor assigns Nia to Avery's night shift and Omar to the morning shift. Those assignments decide which care recipients each person can access after login.
-During the night, Nia saves one note: Avery woke twice after 3 AM, asked for water, and settled when the room stayed quiet. The backend sends this as durable memory to Cognee.
-In the morning, Omar does not paste that note. He clicks generate handoff. The backend asks Cognee for relevant case memory, Gemini turns the recalled sources into a structured handoff, and the app cites where each item came from.
-Omar can also ask what changed after 3 AM. The answer is built from saved memory, not from a fresh explanation typed into the prompt.
-The supervisor can mark a note important so future handoffs prioritize it, or remove stale memory so it stops appearing. That is the full lifecycle: remember, recall, improve, and forget.
-For judges, proof mode shows Cognee Cloud active, Gemini active, redacted backend-to-memory communication, source IDs, and trace events.
-OpenAI Codex was used during development as an AI pair engineer. Gemini is the runtime reasoning layer. Cognee is the runtime memory layer.
-This is a hackathon MVP using synthetic data, not production healthcare software. The claim is focused: a note saved by one worker can be remembered, recalled with source, improved, and forgotten without the next worker pasting context again.
+This is a real walkthrough of Caregiver Handoff Memory running locally with the FastAPI backend connected to Cognee Cloud and Gemini.
+The public page introduces the product: every shift should start with the right context, not a lost chat thread.
+The app starts with role-based sign in. Demo sign-in issues a JWT, and the backend decides which patients and actions each user can access.
+Rosa signs in as the supervisor. She sees the assignment dashboard, where Nia is assigned to the night shift and Omar is assigned to the morning shift for Avery.
+Nia signs in as the night caregiver. She only sees her night-shift workspace, so she saves the important overnight note: Avery woke twice after 3 AM, asked for water, and settled when the room stayed quiet.
+That note is remembered through the backend memory layer. The worker does not need to know Cognee exists. She just saves the thing the next shift must not miss.
+Omar signs in as the morning lead. Before generating the handoff, the screen has no pasted context from Nia.
+When Omar clicks generate handoff, the backend recalls Avery's case memory from Cognee, Gemini writes a structured handoff from the recalled sources, and the UI shows the source-backed brief.
+Omar then asks a follow-up: what changed after 3 AM? The app answers from saved memory and cites the remembered note.
+Rosa returns as supervisor. She can review the memory that will keep shaping future handoffs.
+When she marks a note important, that feedback is sent as an improve signal so future handoffs prioritize it.
+Finally, judge mode shows the proof: Cognee Cloud is active, Gemini is active, and the memory lifecycle includes remember, recall, improve, and forget traces with API keys redacted.
+The submission also declares AI usage: Codex helped build the product, Gemini is the runtime reasoning layer, and Cognee is the runtime memory layer.
