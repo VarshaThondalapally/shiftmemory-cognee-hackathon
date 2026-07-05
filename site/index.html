@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Handoff Memory - Cognee Hackathon</title>
+    <title>Handoff Memory - Home-Care Shift Handoffs</title>
     <meta
       name="description"
-      content="A shift handoff memory product that keeps useful context alive across notes, handoffs, questions, corrections, and deletion."
+      content="A memory-backed morning handoff workspace for home-care and assisted-living teams, powered by Cognee as the durable memory layer."
     />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
@@ -17,214 +17,225 @@
         <span>Handoff Memory</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#problem">Problem</a>
-        <a href="#flow">Flow</a>
-        <a href="#memory">How it works</a>
-        <a href="#docs">Docs</a>
+        <a href="#who">Who it helps</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#product">Product</a>
+        <a href="#cognee">Cognee layer</a>
         <a class="nav-demo" href="demo.html">Runbook</a>
       </nav>
     </header>
 
     <main id="top">
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Shift handoff memory</p>
-          <h1>The morning shift should not start from zero.</h1>
+      <section class="hero-photo" aria-label="Care team morning handoff">
+        <div class="hero-shade"></div>
+        <div class="hero-content">
+          <p class="eyebrow">For home-care and assisted-living teams</p>
+          <h1>Home-care handoff memory.</h1>
           <p class="lede">
-            The app gives a team one shared case history for what changed,
-            what still needs attention, and why it matters. A worker leaves a
-            note. The next shift gets a cited handoff. A supervisor fixes
-            mistakes. The team stops rebuilding context from scratch.
+            Night caregivers leave notes once. The morning care lead gets a clean,
+            source-backed handoff, can ask follow-up questions, and can remove
+            stale context before it misleads the next shift.
           </p>
           <div class="actions">
-            <a class="button primary" href="demo.html">Run the real app</a>
-            <a class="button secondary" href="#memory">See how it works</a>
-          </div>
-        </div>
-
-        <aside class="handoff-preview" aria-label="Handoff preview">
-          <div class="preview-head">
-            <span>Resident Avery</span>
-            <strong>Morning handoff</strong>
-          </div>
-          <div class="note-stream">
-            <p><span>7:42 PM</span> Family asked for a morning callback before 10.</p>
-            <p><span>8:10 PM</span> Hydration was lower than usual. Check again at breakfast.</p>
-            <p><span>9:05 PM</span> Picture cards worked better than open-ended prompts.</p>
-          </div>
-          <div class="handoff-lines">
-            <p><b>Start here:</b> call family before 10 and mention the hydration check.</p>
-            <p><b>Watch:</b> breakfast hydration; previous shift flagged it as a risk.</p>
-            <p><b>Use:</b> picture cards for speech practice.</p>
-          </div>
-          <div class="source-strip" aria-label="Handoff lifecycle">
-            <span>saved</span>
-            <span>found</span>
-            <span>corrected</span>
-            <span>removed</span>
-          </div>
-        </aside>
-      </section>
-
-      <section class="story" id="problem">
-        <div class="section-kicker">Why this exists</div>
-        <div class="story-grid">
-          <h2>Handoffs fail when the next person has to reconstruct the past.</h2>
-          <div class="story-copy">
-            <p>
-              Most tools only work after someone gathers all the context. Real
-              shift work is the opposite. The context is already scattered across
-              notes, files, small decisions, and things people forgot to repeat.
-            </p>
-            <p>
-              This is not trying to be a medical assistant. It is a
-              handoff system: keep useful facts, cite where they came from, let
-              a human correct them, and remove what should not stay.
-            </p>
+            <a class="button primary" href="demo.html">Open judge runbook</a>
+            <a class="button secondary" href="#product">See product screens</a>
           </div>
         </div>
       </section>
 
-      <section class="flow-section" id="flow">
-        <div class="section-kicker">The product flow</div>
-        <h2>A simple workflow for the team. A reliable case history underneath.</h2>
-        <ol class="journey">
-          <li>
-            <span class="step-number">1</span>
-            <div>
-              <h3>Leave the shift note</h3>
-              <p>The worker writes what changed. To them, it feels like normal note-taking.</p>
-            </div>
-            <strong>Saved to the case history.</strong>
-          </li>
-          <li>
-            <span class="step-number">2</span>
-            <div>
-              <h3>Generate the next handoff</h3>
-              <p>The next shift asks for the handoff and sees a short, source-backed brief.</p>
-            </div>
-            <strong>Relevant prior notes are pulled in.</strong>
-          </li>
-          <li>
-            <span class="step-number">3</span>
-            <div>
-              <h3>Correct what matters</h3>
-              <p>A supervisor marks a detail important or fixes the way it was summarized.</p>
-            </div>
-            <strong>Future handoffs prioritize the correction.</strong>
-          </li>
-          <li>
-            <span class="step-number">4</span>
-            <div>
-              <h3>Remove what should not stay</h3>
-              <p>Incorrect, stale, or sensitive details can be removed from future handoffs.</p>
-            </div>
-            <strong>Removed details stop appearing.</strong>
-          </li>
-        </ol>
+      <section class="target-section" id="who">
+        <div class="section-kicker">Exact user</div>
+        <div class="target-layout">
+          <div>
+            <h2>We are building for the morning care lead, not for a generic shift worker.</h2>
+            <p>
+              The first buyer is a small home-care agency or assisted-living
+              team. The daily hero is the person who starts the morning shift,
+              checks what happened overnight, briefs caregivers, and calls family
+              before the day gets busy.
+            </p>
+          </div>
+          <div class="role-stack" aria-label="Users">
+            <article>
+              <span>Night caregiver</span>
+              <strong>Leaves short notes during the shift</strong>
+            </article>
+            <article>
+              <span>Morning care lead</span>
+              <strong>Turns remembered notes into a safe handoff</strong>
+            </article>
+            <article>
+              <span>Supervisor</span>
+              <strong>Prioritizes, corrects, and removes stale memory</strong>
+            </article>
+          </div>
+        </div>
       </section>
 
-      <section class="cognee-section" id="memory">
-        <div class="section-kicker">How it works</div>
+      <section class="workflow-section" id="workflow">
+        <div class="section-kicker">The real morning</div>
+        <h2>A caregiver should not have to reread every note to know what changed.</h2>
+        <div class="shift-timeline" aria-label="Shift handoff timeline">
+          <article>
+            <span>2:55 AM</span>
+            <h3>Night note</h3>
+            <p>Avery woke twice, asked for water, and settled in a quiet room.</p>
+          </article>
+          <article>
+            <span>6:45 AM</span>
+            <h3>Morning handoff</h3>
+            <p>The care lead sees that note under Watch Today with its source.</p>
+          </article>
+          <article>
+            <span>7:10 AM</span>
+            <h3>Supervisor review</h3>
+            <p>The lead marks the wake-up note important for the next handoff.</p>
+          </article>
+          <article>
+            <span>7:15 AM</span>
+            <h3>Stale note removed</h3>
+            <p>An outdated orange-juice preference is forgotten before it repeats.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="product-section" id="product">
+        <div class="section-kicker">Interactive product shape</div>
+        <div class="product-heading">
+          <h2>One product, four clear work modes.</h2>
+          <p>
+            The same case memory powers every screen, but each person sees only
+            the action they came to do.
+          </p>
+        </div>
+
+        <div class="role-demo" data-role-demo>
+          <div class="role-tabs" role="tablist" aria-label="Product roles">
+            <button class="active" type="button" data-role="night">Night caregiver</button>
+            <button type="button" data-role="morning">Morning lead</button>
+            <button type="button" data-role="supervisor">Supervisor</button>
+            <button type="button" data-role="judge">Judge proof</button>
+          </div>
+
+          <div class="demo-shell">
+            <div class="phone-frame" aria-label="Product screen preview">
+              <div class="phone-top">
+                <span id="screenRole">Night caregiver</span>
+                <strong>Avery Johnson</strong>
+              </div>
+              <div class="screen-content" id="screenContent">
+                <div class="note-card hot">
+                  <span>Quick note</span>
+                  <p>At 3 AM Avery woke twice, asked for water, and settled after the room was quiet.</p>
+                </div>
+                <div class="input-row">
+                  <span>Type note...</span>
+                  <strong>Save</strong>
+                </div>
+                <div class="micro-list">
+                  <p><b>Family</b> asked for update before 9 AM.</p>
+                  <p><b>Task</b> send blue laundry bag after lunch.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="screen-explainer">
+              <p class="eyebrow">What this screen proves</p>
+              <h3 id="roleTitle">The night caregiver does normal note-taking.</h3>
+              <p id="roleCopy">
+                No one asks them to understand Cognee. They just write what
+                changed. The backend remembers the note as case memory.
+              </p>
+              <div class="memory-callout" id="roleMemory">
+                User action: Save note. Cognee action: remember.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cognee-section" id="cognee">
+        <div class="section-kicker">Why Cognee is here</div>
         <div class="cognee-layout">
           <div>
-            <h2>The product feels like a handoff board, not a technical console.</h2>
+            <h2>Cognee is the memory layer, not a button the caregiver has to learn.</h2>
             <p>
-              The UI stays human: notes, handoffs, questions, corrections, and
-              deletion. Behind the scenes, the backend keeps a case-scoped history
-              service and only passes relevant, authorized context into generated
-              answers.
+              A normal LLM can summarize whatever you paste into the chat.
+              This product needs memory that survives refreshes, sessions,
+              workers, and review cycles. Cognee owns that durable case context.
             </p>
           </div>
-          <div class="operation-list" aria-label="Product action mapping">
+          <div class="memory-map" aria-label="User actions mapped to Cognee">
             <div>
-              <span>User adds a note or file</span>
-              <strong>save</strong>
+              <span>Caregiver saves a note</span>
+              <strong>remember</strong>
             </div>
             <div>
-              <span>User asks "what changed?"</span>
-              <strong>find</strong>
+              <span>Morning lead asks for handoff</span>
+              <strong>recall</strong>
             </div>
             <div>
-              <span>Supervisor marks what mattered</span>
-              <strong>prioritize</strong>
+              <span>Supervisor marks a source important</span>
+              <strong>cognify</strong>
             </div>
             <div>
-              <span>Team removes bad or stale context</span>
-              <strong>remove</strong>
+              <span>Team removes stale context</span>
+              <strong>forget</strong>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="proof-section" id="architecture">
-        <div class="section-kicker">For reviewers</div>
-        <h2>The submission separates product experience from engineering proof.</h2>
-        <div class="proof-rail">
-          <p>
-            Normal users should know whether the handoff is useful and where each
-            claim came from. They should not have to understand the technical
-            storage layer.
-          </p>
-          <p>
-            Judges and engineers get the proof: Gemini recall planning,
-            Cognee-backed case memory, backend-only API keys, source references,
-            operation traces, deletion behavior, and SRE runbooks.
-          </p>
-        </div>
-        <div class="architecture-line" aria-label="Architecture summary">
-          <span>Web app</span>
-          <span>Backend API</span>
-          <span>Case history</span>
-          <span>History service</span>
-          <span>Writer</span>
-          <span>Cited handoff</span>
+      <section class="comparison-section">
+        <div class="section-kicker">Why this is needed</div>
+        <h2>This is not another chat box for care notes.</h2>
+        <div class="comparison-grid">
+          <article>
+            <h3>Generic LLM workflow</h3>
+            <p>Someone has to paste yesterday's context again. If they forget, the answer starts from zero.</p>
+          </article>
+          <article>
+            <h3>Handoff Memory workflow</h3>
+            <p>The case remembers prior notes, recalls the right sources, improves from review, and forgets stale information.</p>
+          </article>
+          <article>
+            <h3>What the business gets</h3>
+            <p>Faster morning briefings, fewer repeated questions, clearer source history, and safer cleanup of outdated notes.</p>
+          </article>
         </div>
       </section>
 
       <section class="demo-section" id="demo">
         <div>
-          <div class="section-kicker">Try it</div>
-          <h2>Run the backend-backed product when you want to click through the workflow.</h2>
+          <div class="section-kicker">Try the submission</div>
+          <h2>Run the app for the role flow. Open proof only when a judge asks.</h2>
           <p>
-            The runbook shows how to start the React and FastAPI app with
-            Cognee and Gemini enabled, then use the Proof tab during judging.
+            The live app shows the care workflow. The runbook explains how to
+            verify Cognee calls without exposing keys in the browser.
           </p>
         </div>
         <a class="button primary" href="demo.html">Open runbook</a>
       </section>
 
       <section class="docs-section" id="docs">
-        <div class="section-kicker">Builder notes</div>
-        <h2>For judges who want to see how we would build and operate it.</h2>
+        <div class="section-kicker">Reviewer material</div>
+        <h2>Engineering proof stays available, but it is no longer the product story.</h2>
         <div class="doc-links">
-          <a href="docs/10_PHASE_1_AND_2_BUILD_PLAN.md">
-            <span>Build plan</span>
-            <small>how final mode uses Gemini and Cognee</small>
-          </a>
-          <a href="docs/02_Cognee_Memory_Architecture.md">
-            <span>Shared history design</span>
-            <small>how notes become useful handoff context</small>
-          </a>
-          <a href="docs/05_API_Contract.md">
-            <span>Product actions</span>
-            <small>how note, handoff, question, correction, and removal work</small>
-          </a>
-          <a href="docs/06_Security_Threat_Model.md">
-            <span>Trust model</span>
-            <small>isolation, unsafe input, and deletion behavior</small>
-          </a>
-          <a href="docs/07_SRE_Operational_Readiness.md">
-            <span>Reliability plan</span>
-            <small>what happens when services fail or slow down</small>
-          </a>
-          <a href="docs/08_MVP_Roadmap_and_Acceptance.md">
-            <span>Launch checklist</span>
-            <small>what must pass before submission</small>
-          </a>
           <a href="docs/11_Final_Test_Report.md">
             <span>Final test report</span>
             <small>live Cognee proof and build verification</small>
+          </a>
+          <a href="docs/02_Cognee_Memory_Architecture.md">
+            <span>Cognee memory architecture</span>
+            <small>case memory, source grounding, improve, and forget</small>
+          </a>
+          <a href="docs/06_Security_Threat_Model.md">
+            <span>Security model</span>
+            <small>backend-only keys, case boundaries, unsafe input, deletion</small>
+          </a>
+          <a href="docs/07_SRE_Operational_Readiness.md">
+            <span>SRE runbook</span>
+            <small>timeouts, failures, latency, and operational checks</small>
           </a>
         </div>
       </section>
@@ -232,7 +243,126 @@
 
     <footer>
       <span>Handoff Memory</span>
-      <span>Built for the WeMakeDevs hackathon.</span>
+      <span>Built for the WeMakeDevs x Cognee hackathon.</span>
     </footer>
+
+    <script>
+      const roleData = {
+        night: {
+          label: "Night caregiver",
+          title: "The night caregiver does normal note-taking.",
+          copy:
+            "No one asks them to understand Cognee. They just write what changed. The backend remembers the note as case memory.",
+          memory: "User action: Save note. Cognee action: remember.",
+          html: `
+            <div class="note-card hot">
+              <span>Quick note</span>
+              <p>At 3 AM Avery woke twice, asked for water, and settled after the room was quiet.</p>
+            </div>
+            <div class="input-row">
+              <span>Type note...</span>
+              <strong>Save</strong>
+            </div>
+            <div class="micro-list">
+              <p><b>Family</b> asked for update before 9 AM.</p>
+              <p><b>Task</b> send blue laundry bag after lunch.</p>
+            </div>
+          `,
+        },
+        morning: {
+          label: "Morning care lead",
+          title: "The morning lead starts from a short, cited handoff.",
+          copy:
+            "The lead sees what changed overnight, what must happen before 9 AM, and which source note each item came from.",
+          memory: "User action: Generate handoff. Cognee action: recall.",
+          html: `
+            <div class="handoff-block urgent">
+              <span>Before 9 AM</span>
+              <p>Call Mira before breakfast with a family update.</p>
+              <small>Source: night worker note</small>
+            </div>
+            <div class="handoff-block">
+              <span>Watch today</span>
+              <p>Avery woke twice after 3 AM and settled with water and quiet.</p>
+              <small>Source: overnight observation</small>
+            </div>
+            <div class="handoff-block">
+              <span>Later today</span>
+              <p>Send the blue laundry bag with family pickup after lunch.</p>
+              <small>Source: shift checklist</small>
+            </div>
+          `,
+        },
+        supervisor: {
+          label: "Supervisor",
+          title: "The supervisor changes what future handoffs prioritize.",
+          copy:
+            "They mark high-signal notes important and remove stale instructions before the next worker repeats them.",
+          memory: "User action: Prioritize or remove. Cognee actions: cognify and forget.",
+          html: `
+            <div class="review-row">
+              <p>3 AM wake-up note</p>
+              <strong>Important</strong>
+            </div>
+            <div class="review-row stale">
+              <p>Old orange-juice preference</p>
+              <strong>Forget</strong>
+            </div>
+            <div class="note-card">
+              <span>Result</span>
+              <p>Future handoffs keep the wake-up context and stop showing the stale preference.</p>
+            </div>
+          `,
+        },
+        judge: {
+          label: "Judge proof",
+          title: "The judge can inspect memory operations without exposing keys.",
+          copy:
+            "Proof mode shows redacted backend-to-Cognee calls, source ids, latencies, and lifecycle status.",
+          memory: "Verified operations: remember, recall, cognify, forget.",
+          html: `
+            <div class="trace-row">
+              <span>/api/v1/remember</span>
+              <strong>200</strong>
+            </div>
+            <div class="trace-row">
+              <span>/api/v1/recall</span>
+              <strong>200</strong>
+            </div>
+            <div class="trace-row">
+              <span>/api/v1/cognify</span>
+              <strong>200</strong>
+            </div>
+            <div class="trace-row">
+              <span>/api/v1/forget</span>
+              <strong>200</strong>
+            </div>
+          `,
+        },
+      };
+
+      const demo = document.querySelector("[data-role-demo]");
+      if (demo) {
+        const buttons = demo.querySelectorAll("[data-role]");
+        const screenRole = document.getElementById("screenRole");
+        const screenContent = document.getElementById("screenContent");
+        const roleTitle = document.getElementById("roleTitle");
+        const roleCopy = document.getElementById("roleCopy");
+        const roleMemory = document.getElementById("roleMemory");
+
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            buttons.forEach((item) => item.classList.remove("active"));
+            button.classList.add("active");
+            const data = roleData[button.dataset.role];
+            screenRole.textContent = data.label;
+            screenContent.innerHTML = data.html;
+            roleTitle.textContent = data.title;
+            roleCopy.textContent = data.copy;
+            roleMemory.textContent = data.memory;
+          });
+        });
+      }
+    </script>
   </body>
 </html>
