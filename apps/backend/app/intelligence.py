@@ -237,7 +237,7 @@ class GeminiIntelligenceService(LocalIntelligenceService):
     provider_name = "gemini"
     configured = True
 
-    def __init__(self, api_key: str, model: str = "gemini-1.5-flash", strict: bool = True) -> None:
+    def __init__(self, api_key: str, model: str = "gemini-2.5-flash", strict: bool = True) -> None:
         self.api_key = api_key
         self.model = model
         self.strict = strict
@@ -371,7 +371,8 @@ Sources:
             return ""
 
     def _call_gemini(self, prompt: str, json_mode: bool) -> str:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
+        model_path = self.model if self.model.startswith("models/") else f"models/{self.model}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/{model_path}:generateContent"
         generation_config: dict[str, Any] = {"temperature": 0.1}
         if json_mode:
             generation_config["responseMimeType"] = "application/json"
@@ -502,7 +503,7 @@ def make_intelligence_service() -> LocalIntelligenceService:
     provider = os.getenv("LLM_PROVIDER", "").strip().lower()
     api_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("LLM_API_KEY", "").strip()
     if provider == "gemini" or (provider == "" and api_key):
-        model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
         strict = truthy(os.getenv("LLM_STRICT", "true"))
         return GeminiIntelligenceService(api_key=api_key, model=model, strict=strict)
     return LocalIntelligenceService()
