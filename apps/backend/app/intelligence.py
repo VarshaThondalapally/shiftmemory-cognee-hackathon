@@ -87,39 +87,14 @@ class LocalIntelligenceService:
     def plan_recall(self, case: dict[str, Any], focus: str) -> list[dict[str, Any]]:
         return [
             {
-                "bucket": "watch_today",
-                "intent": "Find overnight behavior changes and morning watch items.",
-                "query": f"{case['name']} overnight changes restless woke settled water quiet room watch today {focus}",
-                "search_type": "TEMPORAL",
-                "top_k": 6,
-            },
-            {
-                "bucket": "before_9",
-                "intent": "Find urgent family or time-sensitive requests before 9 AM.",
-                "query": f"{case['name']} family call update before 9 AM urgent callback {focus}",
-                "search_type": "HYBRID_COMPLETION",
-                "top_k": 6,
-            },
-            {
-                "bucket": "care_preferences",
-                "intent": "Find changed care preferences and outdated instructions.",
-                "query": f"{case['name']} changed preference breakfast oatmeal avoid orange juice outdated {focus}",
-                "search_type": "GRAPH_COMPLETION",
-                "top_k": 6,
-            },
-            {
-                "bucket": "later_today",
-                "intent": "Find unresolved practical tasks for later today.",
-                "query": f"{case['name']} unresolved task later today pickup laundry appointment checklist {focus}",
-                "search_type": "HYBRID_COMPLETION",
-                "top_k": 6,
-            },
-            {
                 "bucket": "review_with_supervisor",
-                "intent": "Find conflicts, stale notes, and items needing supervisor review.",
-                "query": f"{case['name']} review conflict stale wrong outdated supervisor needs review {focus}",
-                "search_type": "GRAPH_COMPLETION",
-                "top_k": 6,
+                "intent": "Find all source notes needed for a morning handoff: overnight changes, urgent family requests, changed preferences, later tasks, and stale notes.",
+                "query": (
+                    f"{case['name']} morning handoff overnight changes watch items family before 9 "
+                    f"breakfast preferences oatmeal orange juice tasks laundry review stale notes {focus}"
+                ),
+                "search_type": "CHUNKS",
+                "top_k": 12,
             },
         ]
 
@@ -293,6 +268,8 @@ Focus:
 {focus}
 """
         fallback = super().plan_recall(case, focus)
+        if truthy(os.getenv("COGNEE_FAST_DEMO_RECALL", "true")):
+            return fallback
         data = self._generate_json(prompt, fallback)
         if not isinstance(data, list):
             data = fallback
@@ -424,7 +401,7 @@ Sources:
                 continue
             backup = fallback_by_bucket.get(bucket, fallback[0])
             search_type = raw.get("search_type")
-            if search_type not in SEARCH_TYPES:
+            if search_type not in SEARCH_TYPES or search_type in {None, "TEMPORAL", "HYBRID_COMPLETION"}:
                 search_type = backup["search_type"]
             normalized.append(
                 {

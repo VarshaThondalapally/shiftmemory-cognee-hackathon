@@ -166,7 +166,7 @@ Triggered by:
 
 Backend responsibilities:
 
-- store feedback event;
+- audit the feedback event without turning reviewer wording into a worker-facing note;
 - send enrichment or improvement signal to Cognee;
 - optionally promote useful session memory into permanent case memory;
 - keep a visible audit trail.

@@ -76,8 +76,9 @@ Backend-only `.env` for final mode. You can copy from `apps/backend/.env.final.e
 
 ```text
 MEMORY_BACKEND=cognee
-COGNEE_BASE_URL=https://api.cognee.ai
+COGNEE_BASE_URL=https://tenant-your-tenant-id.aws.cognee.ai
 COGNEE_API_KEY=your_key
+COGNEE_TENANT_ID=your_tenant_id
 COGNEE_STRICT=true
 COGNEE_DATASET_PREFIX=handoff-demo
 COGNEE_ALLOW_LOCAL_RANK_FALLBACK=false

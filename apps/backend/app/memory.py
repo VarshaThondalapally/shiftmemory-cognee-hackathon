@@ -264,11 +264,6 @@ class LocalMemoryService:
                 raise KeyError(memory_id)
 
         feedback_text = feedback.strip()
-        if feedback_text and not self._is_generic_feedback(feedback_text):
-            item = self._new_item("feedback", feedback_text, "supervisor review")
-            item["important"] = True
-            case["memories"].append(item)
-            touched.append(item["id"])
 
         trace = self._trace(
             "improve",
@@ -277,7 +272,7 @@ class LocalMemoryService:
             time.perf_counter() - start,
             {
                 "feedback": feedback_text,
-                "proof": "A reviewer changed what future handoffs should prioritize.",
+                "proof": "A reviewer changed what future handoffs should prioritize without adding reviewer wording as a worker-facing note.",
             },
         )
         case["traces"].append(trace)
@@ -408,7 +403,11 @@ class LocalMemoryService:
         return sorted(memories, key=score, reverse=True)
 
     def _visible_memories(self, memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [item for item in memories if not self._is_generic_feedback(item.get("text", ""))]
+        return [
+            item
+            for item in memories
+            if item.get("type") != "feedback" and not self._is_generic_feedback(item.get("text", ""))
+        ]
 
     def _is_generic_feedback(self, text: str) -> bool:
         return text.strip().lower() in GENERIC_FEEDBACK_TEXTS
@@ -479,12 +478,14 @@ class CogneeMemoryService(LocalMemoryService):
         path: Path = DATA_PATH,
         strict: bool = True,
         dataset_prefix: str = "handoff-demo",
+        tenant_id: str = "",
     ) -> None:
         super().__init__(path)
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.strict = strict
         self.dataset_prefix = dataset_prefix
+        self.tenant_id = tenant_id
         self.timeout = httpx.Timeout(40.0)
 
     def backend_status(self) -> dict[str, Any]:
@@ -495,6 +496,7 @@ class CogneeMemoryService(LocalMemoryService):
             "configured": bool(self.base_url and self.api_key),
             "strict": self.strict,
             "dataset_prefix": self.dataset_prefix,
+            "tenant_configured": bool(self.tenant_id),
             "message": "Cognee Cloud is the memory layer. Local JSON is only the product workflow cache.",
         }
 
@@ -608,28 +610,6 @@ class CogneeMemoryService(LocalMemoryService):
                 raise KeyError(memory_id)
 
         feedback_text = feedback.strip()
-        remote_remember: dict[str, Any] | None = None
-        if feedback_text and not self._is_generic_feedback(feedback_text):
-            feedback_item = self._new_item("feedback", feedback_text, "supervisor review")
-            feedback_item["important"] = True
-            feedback_dataset = self._dataset_for_memory(case_id, feedback_item["id"])
-            feedback_item["cognee_dataset"] = feedback_dataset
-            try:
-                remote_remember = self._remember_remote(case, feedback_item, feedback_dataset)
-            except MemoryBackendError as exc:
-                self._record_cognee_failure(
-                    state,
-                    case,
-                    "improve_failed",
-                    touched,
-                    start,
-                    exc,
-                    "Cognee remember failed while storing reviewer feedback.",
-                )
-                raise
-            case["memories"].append(feedback_item)
-            touched.append(feedback_item["id"])
-            target_datasets.append(feedback_dataset)
 
         improve_text = feedback_text or "Supervisor marked this note important."
         try:
@@ -645,10 +625,7 @@ class CogneeMemoryService(LocalMemoryService):
                 "Cognee improve failed before reviewer priority could be stored in memory.",
             )
             raise
-        cognee_calls = []
-        if remote_remember:
-            cognee_calls.append(remote_remember)
-        cognee_calls.extend(remote_improve.get("calls", []))
+        cognee_calls = list(remote_improve.get("calls", []))
 
         trace = self._trace(
             "improve",
@@ -658,10 +635,9 @@ class CogneeMemoryService(LocalMemoryService):
             {
                 "feedback": feedback_text,
                 "cognee_datasets": target_datasets,
-                "cognee_remember_response": remote_remember.get("response") if remote_remember else None,
                 "cognee_improve_response": [call.get("response") for call in remote_improve.get("calls", [])],
                 "cognee_calls": cognee_calls,
-                "proof": "Reviewer priority was sent to Cognee without creating duplicate generic notes.",
+                "proof": "Reviewer priority was sent to Cognee as a re-processing signal without surfacing reviewer wording as a handoff fact.",
             },
         )
         case["traces"].append(trace)
@@ -778,7 +754,7 @@ class CogneeMemoryService(LocalMemoryService):
                         "datasets": [],
                         "query": query,
                         "topK": limit,
-                        "onlyContext": True,
+                        "onlyContext": False,
                         "includeReferences": True,
                         "scope": "auto",
                     }
@@ -793,11 +769,10 @@ class CogneeMemoryService(LocalMemoryService):
                 "query": query,
                 "systemPrompt": "Return source-grounded context. Preserve any memory_id fields from the stored JSON.",
                 "topK": limit,
-                "onlyContext": True,
+                "onlyContext": False,
                 "verbose": False,
                 "includeReferences": True,
                 "scope": "auto",
-                "contextProfile": "agent",
             },
         )
 
@@ -839,12 +814,11 @@ class CogneeMemoryService(LocalMemoryService):
         for dataset in datasets:
             calls.append(
                 self._post_json(
-                    "/api/v1/improve",
+                    "/api/v1/cognify",
                     {
-                        "datasetName": dataset,
-                        "data": feedback,
+                        "datasets": [dataset],
                         "runInBackground": False,
-                        "buildGlobalContextIndex": False,
+                        "customPrompt": f"Re-process this memory with reviewer feedback in mind: {feedback}",
                     },
                 )
             )
@@ -890,9 +864,10 @@ class CogneeMemoryService(LocalMemoryService):
     def _request(self, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
         url = f"{self.base_url}{path}"
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
             "X-Api-Key": self.api_key,
         }
+        if self.tenant_id:
+            headers["X-Tenant-Id"] = self.tenant_id
         start = time.perf_counter()
         call: dict[str, Any] = {
             "provider": "cognee",
@@ -900,8 +875,8 @@ class CogneeMemoryService(LocalMemoryService):
             "method": method,
             "endpoint": path,
             "auth": {
-                "authorization": "redacted",
                 "x_api_key": "redacted",
+                "x_tenant_id": "configured" if self.tenant_id else "not_configured",
             },
             "request": self._sanitize_request(kwargs),
         }
@@ -960,9 +935,9 @@ class CogneeMemoryService(LocalMemoryService):
 
     def _compact(self, value: Any) -> Any:
         text = json.dumps(value, default=str)
-        if len(text) <= 1200:
+        if len(text) <= 20000:
             return value
-        return {"preview": text[:1200], "truncated": True}
+        return {"preview": text[:20000], "truncated": True}
 
     def _dataset_for_memory(self, case_id: str, memory_id: str) -> str:
         slug = re.sub(r"[^a-zA-Z0-9_-]+", "-", f"{case_id}-{memory_id}").strip("-")
@@ -976,5 +951,12 @@ def make_memory_service() -> LocalMemoryService:
     if backend == "cognee" or (base_url and api_key):
         strict = truthy(os.getenv("COGNEE_STRICT", "true"))
         dataset_prefix = os.getenv("COGNEE_DATASET_PREFIX", "handoff-demo")
-        return CogneeMemoryService(base_url=base_url, api_key=api_key, strict=strict, dataset_prefix=dataset_prefix)
+        tenant_id = os.getenv("COGNEE_TENANT_ID", "").strip()
+        return CogneeMemoryService(
+            base_url=base_url,
+            api_key=api_key,
+            strict=strict,
+            dataset_prefix=dataset_prefix,
+            tenant_id=tenant_id,
+        )
     return LocalMemoryService()

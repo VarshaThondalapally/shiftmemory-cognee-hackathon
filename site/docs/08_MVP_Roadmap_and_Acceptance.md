@@ -177,7 +177,7 @@ Steps:
 
 Expected:
 
-- feedback is stored;
+- feedback is audited without becoming a visible handoff fact;
 - Cognee improve is called;
 - future output reflects correction or importance when memory supports it.
 

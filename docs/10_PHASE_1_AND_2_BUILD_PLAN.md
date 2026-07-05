@@ -79,4 +79,4 @@ For the hackathon demo, use two synthetic cases and roughly 8-12 notes total. Th
 
 ## Current Boundary
 
-Phase 1 remains as the local smoke-test path. Phase 2 is activated by setting `MEMORY_BACKEND=cognee`, `COGNEE_BASE_URL`, `COGNEE_API_KEY`, `LLM_PROVIDER=gemini`, and `GEMINI_API_KEY`; that is the final hackathon proof path.
+Phase 1 remains as the local smoke-test path. Phase 2 is activated by setting `MEMORY_BACKEND=cognee`, the tenant-specific `COGNEE_BASE_URL`, `COGNEE_TENANT_ID`, `COGNEE_API_KEY`, `LLM_PROVIDER=gemini`, and `GEMINI_API_KEY`; that is the final hackathon proof path.
