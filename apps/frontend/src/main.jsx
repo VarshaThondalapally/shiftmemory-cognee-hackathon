@@ -46,6 +46,32 @@ const screens = [
   },
 ];
 
+const roleToScreen = {
+  night: "notes",
+  caregiver: "notes",
+  notes: "notes",
+  morning: "handoff",
+  lead: "handoff",
+  handoff: "handoff",
+  supervisor: "review",
+  review: "review",
+  proof: "proof",
+};
+
+const screenToRole = {
+  notes: "night",
+  handoff: "morning",
+  review: "supervisor",
+  proof: "proof",
+};
+
+function initialViewFromUrl() {
+  if (typeof window === "undefined") return "notes";
+  const params = new URLSearchParams(window.location.search);
+  const requestedRole = params.get("role")?.toLowerCase();
+  return roleToScreen[requestedRole] || "notes";
+}
+
 function App() {
   const [cases, setCases] = useState([]);
   const [caseId, setCaseId] = useState("resident-avery");
@@ -54,7 +80,7 @@ function App() {
   const [handoffSources, setHandoffSources] = useState([]);
   const [evidence, setEvidence] = useState(null);
   const [health, setHealth] = useState(null);
-  const [view, setView] = useState("notes");
+  const [view, setView] = useState(initialViewFromUrl);
   const [noteText, setNoteText] = useState("");
   const [noteType, setNoteType] = useState("shift");
   const [question, setQuestion] = useState("What should I tell the family this morning?");
@@ -108,6 +134,23 @@ function App() {
     }
   }
 
+  function selectView(nextView) {
+    setView(nextView);
+    if (typeof window === "undefined") return;
+    const role = screenToRole[nextView] || nextView;
+    const url = new URL(window.location.href);
+    url.searchParams.set("role", role);
+    window.history.replaceState({}, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
+  }
+
+  useEffect(() => {
+    function syncViewToBrowserUrl() {
+      setView(initialViewFromUrl());
+    }
+    window.addEventListener("popstate", syncViewToBrowserUrl);
+    return () => window.removeEventListener("popstate", syncViewToBrowserUrl);
+  }, []);
+
   useEffect(() => {
     run(async () => {});
   }, [caseId]);
@@ -121,7 +164,7 @@ function App() {
         body: JSON.stringify({ type: noteType, text: noteText, source: "night worker note" }),
       });
       setNoteText("");
-      setView("notes");
+      selectView("notes");
     });
   }
 
@@ -135,7 +178,7 @@ function App() {
       });
       setHandoff(data.handoff);
       setHandoffSources(data.sources);
-      setView("handoff");
+      selectView("handoff");
     });
   }
 
@@ -151,7 +194,7 @@ function App() {
       setQuestion(text);
       setAnswer(data.answer);
       setAnswerSources(data.sources);
-      setView("handoff");
+      selectView("handoff");
     });
   }
 
@@ -182,7 +225,7 @@ function App() {
       setHandoffSources([]);
       setAnswer(null);
       setAnswerSources([]);
-      setView("notes");
+      selectView("notes");
     });
   }
 
@@ -230,7 +273,7 @@ function App() {
               key={screen.id}
               className={view === screen.id ? "tab active" : "tab"}
               type="button"
-              onClick={() => setView(screen.id)}
+              onClick={() => selectView(screen.id)}
             >
               <Icon size={17} />
               {screen.label}
