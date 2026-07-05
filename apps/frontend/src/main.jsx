@@ -21,21 +21,21 @@ const screens = [
     label: "Night caregiver",
     icon: Moon,
     title: "End the night without losing the small details.",
-    body: "The person leaving the shift saves only what changed. The memory layer keeps it available after refresh, logout, or a different worker taking over.",
+    body: "Save what changed once. The morning team can open their handoff later without chasing a chat thread.",
   },
   {
     id: "handoff",
     label: "Morning lead",
     icon: ClipboardList,
-    title: "Start the morning from remembered context.",
-    body: "The morning lead gets a source-backed handoff and can ask follow-up questions without asking the night caregiver to repeat everything.",
+    title: "Start the morning with the right context.",
+    body: "The morning lead gets a clean handoff and can ask follow-up questions without asking the night caregiver to repeat everything.",
   },
   {
     id: "review",
     label: "Supervisor",
     icon: BadgeCheck,
-    title: "Keep the shared memory accurate.",
-    body: "A supervisor can mark what matters or remove stale notes before they keep influencing future handoffs.",
+    title: "Keep the handoff accurate.",
+    body: "A supervisor can mark what matters or remove stale notes before they keep shaping future handoffs.",
   },
   {
     id: "proof",
@@ -66,10 +66,14 @@ const screenToRole = {
 };
 
 function initialViewFromUrl() {
-  if (typeof window === "undefined") return "notes";
+  return initialRoleEntryFromUrl() || "notes";
+}
+
+function initialRoleEntryFromUrl() {
+  if (typeof window === "undefined") return "";
   const params = new URLSearchParams(window.location.search);
   const requestedRole = params.get("role")?.toLowerCase();
-  return roleToScreen[requestedRole] || "notes";
+  return roleToScreen[requestedRole] || "";
 }
 
 function App() {
@@ -81,6 +85,7 @@ function App() {
   const [evidence, setEvidence] = useState(null);
   const [health, setHealth] = useState(null);
   const [view, setView] = useState(initialViewFromUrl);
+  const [roleEntry, setRoleEntry] = useState(initialRoleEntryFromUrl);
   const [noteText, setNoteText] = useState("");
   const [noteType, setNoteType] = useState("shift");
   const [question, setQuestion] = useState("What should I tell the family this morning?");
@@ -95,6 +100,7 @@ function App() {
   const importantCount = useMemo(() => memories.filter((item) => item.important).length, [memories]);
   const reviewCount = useMemo(() => memories.filter((item) => item.type === "review").length, [memories]);
   const activeScreen = screens.find((screen) => screen.id === view) || screens[0];
+  const roleSpecificEntry = Boolean(roleEntry);
 
   async function api(path, options = {}) {
     const response = await fetch(`${API_URL}${path}`, {
@@ -136,7 +142,7 @@ function App() {
 
   function selectView(nextView) {
     setView(nextView);
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !roleSpecificEntry) return;
     const role = screenToRole[nextView] || nextView;
     const url = new URL(window.location.href);
     url.searchParams.set("role", role);
@@ -145,7 +151,9 @@ function App() {
 
   useEffect(() => {
     function syncViewToBrowserUrl() {
-      setView(initialViewFromUrl());
+      const nextRoleEntry = initialRoleEntryFromUrl();
+      setRoleEntry(nextRoleEntry);
+      setView(nextRoleEntry || "notes");
     }
     window.addEventListener("popstate", syncViewToBrowserUrl);
     return () => window.removeEventListener("popstate", syncViewToBrowserUrl);
@@ -225,7 +233,7 @@ function App() {
       setHandoffSources([]);
       setAnswer(null);
       setAnswerSources([]);
-      selectView("notes");
+      selectView(view);
     });
   }
 
@@ -250,37 +258,49 @@ function App() {
                 ))}
               </select>
             </label>
-            <button className="quiet-button" type="button" onClick={resetDemo} disabled={busy} title="Reset demo notes">
-              <RotateCcw size={17} />
-              Reset demo
-            </button>
+            {(!roleSpecificEntry || view === "proof") && (
+              <button className="quiet-button" type="button" onClick={resetDemo} disabled={busy} title="Reset demo notes">
+                <RotateCcw size={17} />
+                Reset demo
+              </button>
+            )}
           </div>
-          <div className="memory-summary" aria-label="Current memory summary">
-            <span>Memory in this case</span>
-            <strong>{currentCase?.memory_count || memories.length} notes</strong>
-            <small>
-              {importantCount} priority · {reviewCount} needs review
-            </small>
-          </div>
+          {roleSpecificEntry ? (
+            <div className="memory-summary role-entry-summary" aria-label="Current workspace">
+              <span>Current workspace</span>
+              <strong>{activeScreen.label}</strong>
+              <small>{currentCase?.name || caseData?.name || "Care recipient"}</small>
+            </div>
+          ) : (
+            <div className="memory-summary" aria-label="Current memory summary">
+              <span>Demo case context</span>
+              <strong>{currentCase?.memory_count || memories.length} notes</strong>
+              <small>
+                {importantCount} priority · {reviewCount} needs review
+              </small>
+            </div>
+          )}
         </div>
       </header>
 
-      <nav className="screen-tabs" aria-label="Demo screens">
-        {screens.map((screen) => {
-          const Icon = screen.icon;
-          return (
-            <button
-              key={screen.id}
-              className={view === screen.id ? "tab active" : "tab"}
-              type="button"
-              onClick={() => selectView(screen.id)}
-            >
-              <Icon size={17} />
-              {screen.label}
-            </button>
-          );
-        })}
-      </nav>
+      {!roleSpecificEntry && (
+        <nav className="screen-tabs" aria-label="Demo screens">
+          {screens.map((screen) => {
+            const Icon = screen.icon;
+            return (
+              <button
+                key={screen.id}
+                className={view === screen.id ? "tab active" : "tab"}
+                type="button"
+                onClick={() => selectView(screen.id)}
+              >
+                <Icon size={17} />
+                {screen.label}
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {error && <div className="error-banner">{error}</div>}
 
@@ -348,7 +368,7 @@ function HandoffScreen({
         <div>
           <span className="eyebrow">Morning lead</span>
           <h2>Build the first brief for {name}</h2>
-          <p>Start from the memory that already exists instead of asking someone to paste the night notes again.</p>
+          <p>Start from saved notes instead of asking someone to paste the night shift again.</p>
         </div>
         <button className="primary-action" type="button" onClick={onGenerate} disabled={busy}>
           <RefreshCw size={18} />
@@ -362,7 +382,7 @@ function HandoffScreen({
             <div className="empty-state">
               <ClipboardList size={38} />
               <h3>No handoff generated yet</h3>
-              <p>Click generate. The app will recall stored notes and turn them into the morning brief.</p>
+              <p>Click generate. The app will pull saved notes and turn them into the morning brief.</p>
             </div>
           ) : (
             <>
@@ -384,7 +404,7 @@ function HandoffScreen({
         <aside className="question-panel">
           <form className="ask-form" onSubmit={onAsk}>
             <span className="eyebrow">Follow-up</span>
-            <h2>Ask the remembered notes</h2>
+            <h2>Ask a follow-up</h2>
             <textarea value={question} onChange={(event) => setQuestion(event.target.value)} />
             <div className="preset-row">
               <button type="button" className="quiet-button" onClick={() => onAskPreset("What should I tell the family this morning?")}>
@@ -399,7 +419,7 @@ function HandoffScreen({
             </div>
             <button className="primary-action" type="submit" disabled={busy}>
               <MessageSquareText size={18} />
-              Answer from memory
+              Answer from saved notes
             </button>
           </form>
 
@@ -417,12 +437,14 @@ function HandoffScreen({
 }
 
 function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteType, onSubmit }) {
+  const nightNotes = memories.filter((memory) => memory.source?.toLowerCase().includes("night"));
+
   return (
     <div className="screen-layout two-column">
       <form className="note-form" onSubmit={onSubmit}>
         <span className="eyebrow">Night caregiver</span>
         <h2>Save the thing the morning team must not miss</h2>
-        <p>Write the note the way the caregiver would say it. The app handles memory, recall, and source tracking behind the scenes.</p>
+        <p>Write the note the way the caregiver would say it. It will be available when the morning handoff is opened.</p>
         <label>
           What kind of note is this?
           <select value={noteType} onChange={(event) => setNoteType(event.target.value)}>
@@ -449,18 +471,26 @@ function NotesScreen({ busy, memories, noteText, noteType, setNoteText, setNoteT
       </form>
 
       <div className="timeline timeline-panel">
-        <span className="eyebrow">What the next shift can recall</span>
-        <h2>Stored notes for this care recipient</h2>
-        {memories.map((memory) => (
-          <article key={memory.id} className="timeline-item">
-            <span className={memory.important ? "timeline-pin important" : "timeline-pin"} />
-            <div>
-              <strong>{labelForType(memory.type)}</strong>
-              <p>{memory.text}</p>
-              <small>{memory.source}</small>
-            </div>
-          </article>
-        ))}
+        <span className="eyebrow">Saved from this shift</span>
+        <h2>Night notes ready for morning</h2>
+        {nightNotes.length ? (
+          nightNotes.map((memory) => (
+            <article key={memory.id} className="timeline-item">
+              <span className={memory.important ? "timeline-pin important" : "timeline-pin"} />
+              <div>
+                <strong>{labelForType(memory.type)}</strong>
+                <p>{memory.text}</p>
+                <small>{memory.source}</small>
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="empty-state compact">
+            <Moon size={28} />
+            <h3>No night notes saved yet</h3>
+            <p>Add the first change from the shift. The morning lead will see it in the handoff.</p>
+          </div>
+        )}
       </div>
     </div>
   );

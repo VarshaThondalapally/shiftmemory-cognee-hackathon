@@ -176,6 +176,10 @@ h3 {
   line-height: 1;
 }
 
+.role-entry-summary strong {
+  color: var(--ink);
+}
+
 .screen-tabs {
   display: flex;
   gap: 4px;
@@ -358,6 +362,11 @@ h3 {
   border: 1px dashed #bfc8c0;
   border-radius: 8px;
   background: var(--paper);
+}
+
+.empty-state.compact {
+  margin-top: 18px;
+  padding: 24px;
 }
 
 .empty-state svg {
