@@ -15,6 +15,25 @@ load_dotenv()
 app = FastAPI(title="Handoff Memory API", version="0.2.0")
 memory = make_memory_service()
 
+WATCH_TERMS = (
+    "overnight",
+    "3 am",
+    "3am",
+    "woke",
+    "wake",
+    "restless",
+    "settled",
+    "quiet room",
+    "water",
+    "dizzy",
+    "lower than usual",
+    "check again",
+    "after medication",
+)
+
+PREFERENCE_TERMS = ("breakfast", "oatmeal", "orange juice", "preference", "avoid")
+FAMILY_TERMS = ("family", "mira", "call", "callback", "update")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -159,17 +178,21 @@ def build_handoff(items: list[dict[str, Any]]) -> dict[str, Any]:
         text = item["text"]
         source = item["id"]
         typed = item["type"]
+        text_lower = text.lower()
         entry = {"text": text, "source_ids": [source], "source": item["source"], "important": item.get("important", False)}
-        if typed in {"family", "feedback"} or "before 9" in text.lower():
-            buckets["before_9"].append(entry)
-        elif typed in {"risk", "incident"}:
+        if typed == "task":
+            if "before 9" in text_lower or "callback" in text_lower or ("call" in text_lower and "family" in text_lower):
+                buckets["before_9"].append(entry)
+            else:
+                buckets["later_today"].append(entry)
+        elif typed in {"risk", "incident"} or any(term in text_lower for term in WATCH_TERMS):
             buckets["watch_today"].append(entry)
-        elif typed in {"preference", "feedback"}:
+        elif typed == "family" or "before 9" in text_lower or any(term in text_lower for term in FAMILY_TERMS):
+            buckets["before_9"].append(entry)
+        elif typed == "preference" or any(term in text_lower for term in PREFERENCE_TERMS):
             buckets["care_preferences"].append(entry)
         elif typed == "review":
             buckets["review_with_supervisor"].append(entry)
-        elif typed == "task":
-            buckets["later_today"].append(entry)
         else:
             buckets["review_with_supervisor"].append(entry)
 
@@ -192,16 +215,21 @@ def build_handoff(items: list[dict[str, Any]]) -> dict[str, Any]:
 def answer_question(question: str, items: list[dict[str, Any]]) -> str:
     lower = question.lower()
     if "family" in lower or "call" in lower:
-        family = [item for item in items if item["type"] in {"family", "feedback"}]
+        family = [item for item in items if item["type"] == "family" or contains_any(item["text"], FAMILY_TERMS)]
         if family:
             return f"Tell the family this first: {family[0]['text']}"
     if "breakfast" in lower or "food" in lower or "preference" in lower:
-        preferences = [item for item in items if item["type"] == "preference"]
+        preferences = [item for item in items if item["type"] == "preference" or contains_any(item["text"], PREFERENCE_TERMS)]
         if preferences:
             return f"Use the latest preference note: {preferences[0]['text']}"
     if "watch" in lower or "risk" in lower or "worry" in lower:
-        risks = [item for item in items if item["type"] == "risk"]
+        risks = [item for item in items if item["type"] == "risk" or contains_any(item["text"], WATCH_TERMS)]
         if risks:
             return f"Watch this today: {risks[0]['text']}"
     top = items[0]
     return f"Most relevant note: {top['text']}"
+
+
+def contains_any(text: str, terms: tuple[str, ...]) -> bool:
+    lower = text.lower()
+    return any(term in lower for term in terms)

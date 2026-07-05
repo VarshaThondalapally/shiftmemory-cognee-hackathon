@@ -38,7 +38,7 @@ function App() {
   const [question, setQuestion] = useState("What should I tell the family this morning?");
   const [answer, setAnswer] = useState(null);
   const [answerSources, setAnswerSources] = useState([]);
-  const [feedback, setFeedback] = useState("Prioritize this in the next handoff.");
+  const [feedback, setFeedback] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -139,7 +139,7 @@ function App() {
         method: "POST",
         body: JSON.stringify({ memory_id: memoryId, feedback }),
       });
-      setFeedback("Prioritize this in the next handoff.");
+      setFeedback("");
     });
   }
 
@@ -426,8 +426,12 @@ function ReviewScreen({ busy, memories, feedback, setFeedback, onImprove, onForg
           <p>This is where the system learns what matters and stops using notes that are wrong.</p>
         </div>
         <label className="feedback-input">
-          Feedback
-          <input value={feedback} onChange={(event) => setFeedback(event.target.value)} />
+          Optional correction
+          <input
+            value={feedback}
+            onChange={(event) => setFeedback(event.target.value)}
+            placeholder="Example: this should be mentioned before breakfast"
+          />
         </label>
       </div>
 

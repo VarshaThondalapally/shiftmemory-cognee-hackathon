@@ -15,6 +15,10 @@ import httpx
 
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "local_memory.json"
+GENERIC_FEEDBACK_TEXTS = {
+    "prioritize this in the next handoff.",
+    "supervisor marked this note important for future handoffs.",
+}
 
 
 class MemoryBackendError(RuntimeError):
@@ -150,7 +154,7 @@ class LocalMemoryService:
         state = self._load()
         cases = []
         for case in state["cases"].values():
-            memories = case["memories"]
+            memories = self._visible_memories(case["memories"])
             cases.append(
                 {
                     "id": case["id"],
@@ -168,7 +172,7 @@ class LocalMemoryService:
 
     def get_case(self, case_id: str) -> dict[str, Any]:
         case = self._case(case_id)
-        memories = sorted(case["memories"], key=lambda item: item["created_at"], reverse=True)
+        memories = sorted(self._visible_memories(case["memories"]), key=lambda item: item["created_at"], reverse=True)
         return {
             "id": case["id"],
             "name": case["name"],
@@ -206,7 +210,7 @@ class LocalMemoryService:
         start = time.perf_counter()
         state = self._load()
         case = self._case_from_state(state, case_id)
-        recalled = self._rank(case["memories"], query)[:limit]
+        recalled = self._rank(self._visible_memories(case["memories"]), query)[:limit]
         trace = self._trace(
             "recall",
             case_id,
@@ -237,7 +241,7 @@ class LocalMemoryService:
                 raise KeyError(memory_id)
 
         feedback_text = feedback.strip()
-        if feedback_text:
+        if feedback_text and not self._is_generic_feedback(feedback_text):
             item = self._new_item("feedback", feedback_text, "supervisor review")
             item["important"] = True
             case["memories"].append(item)
@@ -287,11 +291,12 @@ class LocalMemoryService:
         case = self._case(case_id)
         traces = case["traces"]
         counts = Counter(trace["operation"] for trace in traces)
+        visible_memories = self._visible_memories(case["memories"])
         return {
             "case_id": case_id,
             "case_name": case["name"],
             "backend": self.backend_status(),
-            "active_memory_count": len(case["memories"]),
+            "active_memory_count": len(visible_memories),
             "operation_counts": dict(counts),
             "proof_steps": [
                 {
@@ -336,7 +341,7 @@ class LocalMemoryService:
             "task": 3,
             "preference": 2,
             "review": 1,
-            "feedback": 5,
+            "feedback": 0,
         }
 
         def score(item: dict[str, Any]) -> tuple[int, str]:
@@ -348,6 +353,12 @@ class LocalMemoryService:
             return (term_hits + importance + type_hit + priority, item["created_at"])
 
         return sorted(memories, key=score, reverse=True)
+
+    def _visible_memories(self, memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [item for item in memories if not self._is_generic_feedback(item.get("text", ""))]
+
+    def _is_generic_feedback(self, text: str) -> bool:
+        return text.strip().lower() in GENERIC_FEEDBACK_TEXTS
 
     def _new_item(self, memory_type: str, text: str, source: str) -> dict[str, Any]:
         return {
@@ -454,9 +465,10 @@ class CogneeMemoryService(LocalMemoryService):
         start = time.perf_counter()
         state = self._load()
         case = self._case_from_state(state, case_id)
-        datasets = [item.get("cognee_dataset") or self._dataset_for_memory(case_id, item["id"]) for item in case["memories"]]
+        visible_memories = self._visible_memories(case["memories"])
+        datasets = [item.get("cognee_dataset") or self._dataset_for_memory(case_id, item["id"]) for item in visible_memories]
         remote = self._recall_remote(query, datasets, limit)
-        recalled = self._rank(case["memories"], query)[:limit]
+        recalled = self._rank(visible_memories, query)[:limit]
         trace = self._trace(
             "recall",
             case_id,
@@ -478,24 +490,31 @@ class CogneeMemoryService(LocalMemoryService):
         state = self._load()
         case = self._case_from_state(state, case_id)
         touched: list[str] = []
+        target_datasets: list[str] = []
         if memory_id:
             for item in case["memories"]:
                 if item["id"] == memory_id:
                     item["important"] = True
                     touched.append(item["id"])
+                    target_datasets.append(item.get("cognee_dataset") or self._dataset_for_memory(case_id, item["id"]))
                     break
             if not touched:
                 raise KeyError(memory_id)
 
-        feedback_text = feedback.strip() or "Supervisor marked this note important for future handoffs."
-        feedback_item = self._new_item("feedback", feedback_text, "supervisor review")
-        feedback_item["important"] = True
-        feedback_dataset = self._dataset_for_memory(case_id, feedback_item["id"])
-        feedback_item["cognee_dataset"] = feedback_dataset
-        remote_remember = self._remember_remote(case, feedback_item, feedback_dataset)
-        remote_improve = self._improve_remote([feedback_dataset], feedback_text)
-        case["memories"].append(feedback_item)
-        touched.append(feedback_item["id"])
+        feedback_text = feedback.strip()
+        remote_remember: dict[str, Any] | None = None
+        if feedback_text and not self._is_generic_feedback(feedback_text):
+            feedback_item = self._new_item("feedback", feedback_text, "supervisor review")
+            feedback_item["important"] = True
+            feedback_dataset = self._dataset_for_memory(case_id, feedback_item["id"])
+            feedback_item["cognee_dataset"] = feedback_dataset
+            remote_remember = self._remember_remote(case, feedback_item, feedback_dataset)
+            case["memories"].append(feedback_item)
+            touched.append(feedback_item["id"])
+            target_datasets.append(feedback_dataset)
+
+        improve_text = feedback_text or "Supervisor marked this note important."
+        remote_improve = self._improve_remote(target_datasets, improve_text) if target_datasets else {"status": "skipped"}
 
         trace = self._trace(
             "improve",
@@ -504,10 +523,10 @@ class CogneeMemoryService(LocalMemoryService):
             time.perf_counter() - start,
             {
                 "feedback": feedback_text,
-                "cognee_dataset": feedback_dataset,
+                "cognee_datasets": target_datasets,
                 "cognee_remember_response": remote_remember,
                 "cognee_improve_response": remote_improve,
-                "proof": "Reviewer feedback was written back to Cognee and enrichment was requested.",
+                "proof": "Reviewer priority was sent to Cognee without creating duplicate generic notes.",
             },
         )
         case["traces"].append(trace)

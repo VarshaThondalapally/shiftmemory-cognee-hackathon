@@ -39,6 +39,16 @@ def main() -> None:
     assert note.status_code == 200, note.text
     new_memory_id = note.json()["memory"]["id"]
 
+    overnight = client.post(
+        "/v1/cases/resident-avery/notes",
+        json={
+            "type": "shift",
+            "text": "Avery woke up twice after 3 AM but settled with water and a quiet room.",
+            "source": "night worker note",
+        },
+    )
+    assert overnight.status_code == 200, overnight.text
+
     answer = client.post(
         "/v1/cases/resident-avery/ask",
         json={"question": "What should I tell the family this morning?"},
@@ -48,9 +58,19 @@ def main() -> None:
 
     improve = client.post(
         "/v1/cases/resident-avery/feedback",
-        json={"memory_id": new_memory_id, "feedback": "This family request should stay at the top."},
+        json={"memory_id": new_memory_id, "feedback": "Prioritize this in the next handoff."},
     )
     assert improve.status_code == 200, improve.text
+
+    handoff_with_overnight = client.post(
+        "/v1/cases/resident-avery/handoff",
+        json={"focus": "morning handoff before 9 family risk breakfast"},
+    )
+    assert handoff_with_overnight.status_code == 200, handoff_with_overnight.text
+    handoff_payload = handoff_with_overnight.json()["handoff"]
+    assert any("3 AM" in item["text"] for item in handoff_payload["watch_today"]), handoff_payload
+    assert any("blue laundry bag" in item["text"] for item in handoff_payload["later_today"]), handoff_payload
+    assert "Prioritize this in the next handoff" not in str(handoff_payload)
 
     forget = client.delete("/v1/cases/resident-avery/memories/mem-old-orange-juice")
     assert forget.status_code == 200, forget.text
