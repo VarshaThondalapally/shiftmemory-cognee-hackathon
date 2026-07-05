@@ -31,7 +31,7 @@
 ## Needs Final Human Decision
 
 - Decide whether to submit the local interactive app plus GitHub Pages, or deploy the full frontend/backend publicly.
-- Record a short demo video if the hackathon form expects one.
+- Upload `submission/video/caregiver-handoff-memory-demo.mp4` to YouTube as unlisted and paste that URL in the form.
 - Confirm the final submitted title. Recommended: `Caregiver Handoff Memory`.
 - Confirm no secrets are committed before final submission.
 

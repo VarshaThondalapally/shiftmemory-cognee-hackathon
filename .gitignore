@@ -14,3 +14,6 @@ build/
 coverage/
 *.log
 apps/backend/data/local_memory.json
+submission/video/frames/
+submission/video/slides.ffconcat
+submission/video/voiceover.wav

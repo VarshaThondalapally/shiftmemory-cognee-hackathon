@@ -144,6 +144,7 @@ PASS: handoff memory demo lifecycle works end to end
 - `docs/`: architecture, security, SRE, and submission docs.
 - `site/`: GitHub Pages microsite.
 - `handover/`: final submission bundle, demo runbook, and AI usage disclosure.
+- `submission/`: hackathon form answers, demo video script, judge review, and generated MP4.
 
 ## Final Handover Bundle
 
@@ -154,6 +155,8 @@ Start with [`handover/README.md`](handover/README.md) for the final packet:
 - AI usage disclosure for Codex, Gemini, Cognee, and AI-assisted visual work.
 - Submission copy.
 - Final checklist and remaining decisions.
+
+For the final hackathon packet, use [`submission/README.md`](submission/README.md). It includes the form answers and points to the generated demo video.
 
 ## Boundaries
 
