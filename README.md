@@ -85,7 +85,7 @@ COGNEE_ALLOW_LOCAL_RANK_FALLBACK=false
 COGNEE_TIMEOUT_SECONDS=120
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-flash-lite-latest
 LLM_STRICT=true
 ```
 
@@ -104,7 +104,7 @@ For local development without paid or hackathon API calls, copy `apps/backend/.e
 
 ## Final Verified Run
 
-Last verified on 2026-07-05 against the tenant-specific Cognee Cloud API and Gemini `gemini-2.5-flash`.
+Last verified on 2026-07-05 against the tenant-specific Cognee Cloud API and Gemini `gemini-flash-lite-latest`.
 
 - Cognee `remember`: 200 for seed notes and the live 3 AM night-shift note.
 - Cognee `recall`: 200 and returned the 3 AM note into the `watch_today` handoff section.

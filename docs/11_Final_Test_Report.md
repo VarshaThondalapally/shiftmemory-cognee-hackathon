@@ -10,7 +10,7 @@ Scope: final hackathon submission flow using the FastAPI backend, React frontend
 - Cognee strict mode: enabled
 - Cognee tenant header: configured
 - Reasoning provider: Gemini
-- Gemini model: `gemini-2.5-flash`
+- Gemini model: `gemini-flash-lite-latest`
 - Browser keys: none
 - Backend secrets: local `.env` only, ignored by Git
 

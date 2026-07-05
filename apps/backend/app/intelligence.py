@@ -212,7 +212,7 @@ class GeminiIntelligenceService(LocalIntelligenceService):
     provider_name = "gemini"
     configured = True
 
-    def __init__(self, api_key: str, model: str = "gemini-2.5-flash", strict: bool = True) -> None:
+    def __init__(self, api_key: str, model: str = "gemini-flash-lite-latest", strict: bool = True) -> None:
         self.api_key = api_key
         self.model = model
         self.strict = strict
@@ -336,7 +336,7 @@ Sources:
             return parse_json(text)
         except Exception as exc:
             if self.strict:
-                raise IntelligenceError(f"Gemini call failed: {exc}") from exc
+                raise IntelligenceError(f"Gemini call failed: {self._redact_error(exc)}") from exc
             return fallback
 
     def _generate_text(self, prompt: str) -> str:
@@ -344,7 +344,7 @@ Sources:
             return self._call_gemini(prompt, json_mode=False).strip()
         except Exception as exc:
             if self.strict:
-                raise IntelligenceError(f"Gemini call failed: {exc}") from exc
+                raise IntelligenceError(f"Gemini call failed: {self._redact_error(exc)}") from exc
             return ""
 
     def _call_gemini(self, prompt: str, json_mode: bool) -> str:
@@ -367,6 +367,9 @@ Sources:
         except (KeyError, IndexError, TypeError) as exc:
             elapsed = round((time.perf_counter() - start) * 1000, 2)
             raise IntelligenceError(f"Gemini returned no text after {elapsed} ms") from exc
+
+    def _redact_error(self, exc: Exception) -> str:
+        return re.sub(r"key=[^'\"\\s]+", "key=redacted", str(exc))
 
     def _normalize_understanding(
         self,
@@ -480,7 +483,7 @@ def make_intelligence_service() -> LocalIntelligenceService:
     provider = os.getenv("LLM_PROVIDER", "").strip().lower()
     api_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("LLM_API_KEY", "").strip()
     if provider == "gemini" or (provider == "" and api_key):
-        model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+        model = os.getenv("GEMINI_MODEL", "gemini-flash-lite-latest").strip()
         strict = truthy(os.getenv("LLM_STRICT", "true"))
         return GeminiIntelligenceService(api_key=api_key, model=model, strict=strict)
     return LocalIntelligenceService()
