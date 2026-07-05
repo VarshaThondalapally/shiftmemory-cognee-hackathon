@@ -72,7 +72,7 @@ Shortcut after dependencies are installed:
 
 Use local mode while designing the UI. Use Cognee plus Gemini mode for the final hackathon proof run.
 
-Backend-only `.env`:
+Backend-only `.env` for final mode. You can copy from `apps/backend/.env.final.example`:
 
 ```text
 MEMORY_BACKEND=cognee
@@ -88,6 +88,8 @@ LLM_STRICT=true
 ```
 
 Use the hackathon Cognee balance only for lifecycle actions: add note, generate handoff, ask question, prioritize, remove, and demo reset. Do not spend it on page refreshes or UI navigation.
+
+For local development without paid or hackathon API calls, copy `apps/backend/.env.example` instead. That keeps `MEMORY_BACKEND=local` and leaves `LLM_PROVIDER` empty so the deterministic fallback is used.
 
 ## What The Proof Screen Shows
 

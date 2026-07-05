@@ -7,6 +7,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
+!.env.final.example
+!apps/backend/.env.final.example
 dist/
 build/
 coverage/
