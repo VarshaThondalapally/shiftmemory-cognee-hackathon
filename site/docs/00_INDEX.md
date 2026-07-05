@@ -30,6 +30,7 @@ The end user does not manage Cognee. The end user manages human work: notes, han
 7. [SRE Operational Readiness](./07_SRE_Operational_Readiness.md)
 8. [MVP Roadmap and Acceptance Checks](./08_MVP_Roadmap_and_Acceptance.md)
 9. [Submission Pitch Deck Outline](./09_Submission_Pitch_Deck_Outline.md)
+10. [Final Test Report](./11_Final_Test_Report.md)
 
 ## MVP Build Rule
 

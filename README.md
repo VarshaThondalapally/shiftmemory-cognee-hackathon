@@ -30,9 +30,9 @@ The browser never receives Cognee or LLM keys. The frontend talks only to the Fa
 
 Cognee is the backend memory layer, not an end-user feature.
 
-- `remember`: night notes and supervisor feedback are written as durable memory.
+- `remember`: night notes and case facts are written as durable memory.
 - `recall`: handoffs and case questions retrieve remembered context.
-- `improve`: reviewer feedback is written back so future outputs prioritize better context.
+- `improve`: reviewer feedback is audited and sent to Cognee as a re-processing signal, without turning reviewer wording into a worker-facing handoff fact.
 - `forget`: removed notes are deleted from future recall.
 
 For final mode, the backend only uses Cognee recall results that can be mapped back to stored source notes. If Cognee returns no verifiable source, the handoff says no verified memory was found instead of inventing a note.
@@ -84,7 +84,7 @@ COGNEE_DATASET_PREFIX=handoff-demo
 COGNEE_ALLOW_LOCAL_RANK_FALLBACK=false
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_key
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash
 LLM_STRICT=true
 ```
 
@@ -100,6 +100,17 @@ For local development without paid or hackathon API calls, copy `apps/backend/.e
 - Redacted backend-to-Cognee requests and responses.
 - Source IDs used in the handoff.
 - Failures, including Cognee API errors, without exposing API keys.
+
+## Final Verified Run
+
+Last verified on 2026-07-05 against the tenant-specific Cognee Cloud API and Gemini `gemini-2.5-flash`.
+
+- Cognee `remember`: 200 for seed notes and the live 3 AM night-shift note.
+- Cognee `recall`: 200 and returned the 3 AM note into the `watch_today` handoff section.
+- Cognee `cognify`: 200 when reviewer feedback marked the 3 AM source important.
+- Cognee `forget`: 200 and removed the stale orange-juice source from the next handoff.
+- Backend verification rejected uncited facts and kept reviewer wording out of the worker-facing handoff.
+- GitHub Pages deployment passed and the public site returned HTTP 200.
 
 ## Smoke Test
 

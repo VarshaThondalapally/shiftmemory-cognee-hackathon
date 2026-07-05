@@ -114,8 +114,53 @@ COGNEE_DATASET_PREFIX=handoff-demo
 COGNEE_ALLOW_LOCAL_RANK_FALLBACK=false
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_key
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash
 LLM_STRICT=true</code></pre>
+        </div>
+      </section>
+
+      <section class="proof-section">
+        <div class="section-kicker">Verified live run</div>
+        <h2>The final submission was tested against the real Cognee tenant flow.</h2>
+        <div class="proof-rail">
+          <p>
+            The demo reset seeded the case into Cognee Cloud, then a live 3 AM
+            note was added. The next handoff recalled that note into Watch
+            Today with its source id. A reviewer marked it important, and the
+            following handoff kept the fact without showing reviewer wording.
+          </p>
+          <p>
+            The stale orange-juice source was forgotten through Cognee and did
+            not appear in the next handoff. The backend proof trace showed
+            redacted Cognee calls for remember, recall, cognify, and forget.
+          </p>
+        </div>
+        <div class="architecture-line" aria-label="Verified live operation statuses">
+          <span>remember 200</span>
+          <span>recall 200</span>
+          <span>cognify 200</span>
+          <span>forget 200</span>
+          <span>Gemini 2.5 Flash</span>
+          <span>Pages 200</span>
+        </div>
+      </section>
+
+      <section class="docs-section">
+        <div class="section-kicker">Testing</div>
+        <h2>What passed before submission.</h2>
+        <div class="doc-links">
+          <a href="docs/11_Final_Test_Report.md">
+            <span>Final test report</span>
+            <small>live Cognee proof, build checks, and Pages deployment result</small>
+          </a>
+          <a href="docs/06_Security_Threat_Model.md">
+            <span>Security model</span>
+            <small>backend-only secrets, case boundaries, unsafe notes, and deletion behavior</small>
+          </a>
+          <a href="docs/07_SRE_Operational_Readiness.md">
+            <span>Reliability model</span>
+            <small>rate limits, failure handling, verification, and operating checks</small>
+          </a>
         </div>
       </section>
     </main>
