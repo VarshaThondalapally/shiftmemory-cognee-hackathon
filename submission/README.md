@@ -10,7 +10,7 @@ This folder is the final submission packet for the Cognee hackathon.
 - Submission form answers: [SUBMISSION_FORM_ANSWERS.md](SUBMISSION_FORM_ANSWERS.md)
 - AI usage disclosure: [../handover/AI_USAGE_DISCLOSURE.md](../handover/AI_USAGE_DISCLOSURE.md)
 - Demo narration: [DEMO_VIDEO_SCRIPT.md](DEMO_VIDEO_SCRIPT.md)
-- Judge-style review: [JUDGE_REVIEW.md](JUDGE_REVIEW.md)
+- Hosting decision: [LIVE_HOSTING_DECISION.md](LIVE_HOSTING_DECISION.md)
 
 ## Recommended Submission Strategy
 
