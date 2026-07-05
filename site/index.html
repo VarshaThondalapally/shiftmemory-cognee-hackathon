@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ShiftMemory - Cognee Hackathon</title>
+    <meta
+      name="description"
+      content="ShiftMemory is a Cognee-backed memory architecture for secure shift handoffs across sessions, agents, and teams."
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="ShiftMemory home">
+        <span class="brand-mark">SM</span>
+        <span>ShiftMemory</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#cognee">Cognee</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#security">Security</a>
+        <a href="#docs">Docs</a>
+        <a href="demo.html">Demo</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="intro band">
+        <div class="intro-copy">
+          <p class="eyebrow">WeMakeDevs x Cognee Hackathon</p>
+          <h1>Persistent AI memory for high-stakes team handoffs.</h1>
+          <p class="lede">
+            ShiftMemory turns Cognee into the durable memory layer for shift-based
+            teams. Workers add normal notes, supervisors review source-backed
+            handoffs, and agents recall the same case memory across sessions.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="demo.html">Open Demo</a>
+            <a class="button" href="#docs">Read Engineering Packet</a>
+          </div>
+        </div>
+        <div class="proof-panel" aria-label="Memory lifecycle summary">
+          <div class="proof-row remember">
+            <span>remember</span>
+            <strong>notes, files, decisions</strong>
+          </div>
+          <div class="proof-row recall">
+            <span>recall</span>
+            <strong>handoff and Q&amp;A context</strong>
+          </div>
+          <div class="proof-row improve">
+            <span>improve</span>
+            <strong>supervisor feedback</strong>
+          </div>
+          <div class="proof-row forget">
+            <span>forget</span>
+            <strong>corrections and retention</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="band split" id="problem">
+        <div>
+          <p class="eyebrow">Problem</p>
+          <h2>Generic AI can summarize a shift. It cannot remember the next one.</h2>
+        </div>
+        <p>
+          Shift work depends on context that is scattered across notes, chats,
+          files, and people's memory. The MVP uses caregiving as the demo wedge,
+          but the architecture applies to support, logistics, field operations,
+          incident response, and any workflow where handoff failures are expensive.
+        </p>
+      </section>
+
+      <section class="band" id="cognee">
+        <p class="eyebrow">Cognee usage</p>
+        <h2>Cognee is the memory substrate, not a checkbox integration.</h2>
+        <div class="grid four">
+          <article>
+            <h3>Remember</h3>
+            <p>Store shift notes, uploaded files, confirmed handoffs, task events, and supervisor decisions as case memory.</p>
+          </article>
+          <article>
+            <h3>Recall</h3>
+            <p>Retrieve scoped memory for generated handoffs, case Q&amp;A, timeline reconstruction, and judge trace proof.</p>
+          </article>
+          <article>
+            <h3>Improve</h3>
+            <p>Feed supervisor corrections and importance signals back into memory so future handoffs get better.</p>
+          </article>
+          <article>
+            <h3>Forget</h3>
+            <p>Remove incorrect, stale, sensitive, or expired memories and verify they no longer appear in recall.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="band" id="architecture">
+        <p class="eyebrow">Architecture</p>
+        <h2>Backend-controlled memory with clear trust boundaries.</h2>
+        <div class="pipeline" aria-label="Architecture pipeline">
+          <div>Web App</div>
+          <div>Backend API</div>
+          <div>Memory Service</div>
+          <div>Cognee Cloud</div>
+          <div>LLM Provider</div>
+          <div>Source-backed Handoff</div>
+        </div>
+        <div class="grid three">
+          <article>
+            <h3>Case-scoped datasets</h3>
+            <p>Each MVP case uses its own Cognee dataset to make isolation easy to reason about and easy to prove.</p>
+          </article>
+          <article>
+            <h3>Bounded LLM context</h3>
+            <p>The LLM only sees authorized recalled memory. It never chooses tenant, case, or dataset scope.</p>
+          </article>
+          <article>
+            <h3>Judge trace</h3>
+            <p>A separate trace view shows Cognee operations, source IDs, result counts, and latency for reviewers.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="band" id="security">
+        <p class="eyebrow">Security and SRE</p>
+        <h2>Memory has to be secure before it can be useful.</h2>
+        <div class="grid three">
+          <article>
+            <h3>Threat model first</h3>
+            <p>Controls cover tenant leakage, prompt injection, hallucination, file upload abuse, and deletion failure.</p>
+          </article>
+          <article>
+            <h3>Operational readiness</h3>
+            <p>SLOs, alerts, runbooks, readiness checks, and balance guardrails are documented before implementation.</p>
+          </article>
+          <article>
+            <h3>Synthetic demo data</h3>
+            <p>The hackathon build must not claim healthcare compliance or use real sensitive data.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="band demo-preview" id="demo">
+        <div class="section-heading">
+          <p class="eyebrow">Visual demo</p>
+          <h2>Current product mock</h2>
+          <p>
+            This is a visual prototype. The MVP must replace mock memory with real
+            Cognee-backed remember, recall, improve, and forget calls.
+          </p>
+        </div>
+        <iframe title="ShiftMemory demo preview" src="demo.html" loading="lazy"></iframe>
+      </section>
+
+      <section class="band" id="docs">
+        <p class="eyebrow">Engineering packet</p>
+        <h2>Pre-MVP documents</h2>
+        <div class="doc-list">
+          <a href="docs/00_INDEX.md">00 - Index</a>
+          <a href="docs/01_Product_Strategy_and_Judging.md">01 - Product Strategy and Judging Fit</a>
+          <a href="docs/02_Cognee_Memory_Architecture.md">02 - Cognee Memory Architecture</a>
+          <a href="docs/03_AI_Agent_Runtime.md">03 - AI Agent Runtime</a>
+          <a href="docs/04_System_Architecture.md">04 - System Architecture</a>
+          <a href="docs/05_API_Contract.md">05 - API Contract</a>
+          <a href="docs/06_Security_Threat_Model.md">06 - Security Threat Model</a>
+          <a href="docs/07_SRE_Operational_Readiness.md">07 - SRE Operational Readiness</a>
+          <a href="docs/08_MVP_Roadmap_and_Acceptance.md">08 - MVP Roadmap and Acceptance</a>
+          <a href="docs/09_Submission_Pitch_Deck_Outline.md">09 - Pitch Deck Outline</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>ShiftMemory</span>
+      <span>Built for the WeMakeDevs x Cognee hackathon.</span>
+    </footer>
+  </body>
+</html>
