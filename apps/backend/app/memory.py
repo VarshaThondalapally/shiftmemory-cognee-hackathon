@@ -490,8 +490,13 @@ class CogneeMemoryService(LocalMemoryService):
             timeout_seconds = max(10.0, float(os.getenv("COGNEE_TIMEOUT_SECONDS", "120")))
         except ValueError:
             timeout_seconds = 120.0
+        try:
+            max_retries = max(0, int(os.getenv("COGNEE_MAX_RETRIES", "2")))
+        except ValueError:
+            max_retries = 2
         self.timeout = httpx.Timeout(timeout_seconds)
         self.timeout_seconds = timeout_seconds
+        self.max_retries = max_retries
 
     def backend_status(self) -> dict[str, Any]:
         return {
@@ -503,6 +508,7 @@ class CogneeMemoryService(LocalMemoryService):
             "dataset_prefix": self.dataset_prefix,
             "tenant_configured": bool(self.tenant_id),
             "timeout_seconds": self.timeout_seconds,
+            "max_retries": self.max_retries,
             "message": "Cognee Cloud is the memory layer. Local JSON is only the product workflow cache.",
         }
 
@@ -874,37 +880,58 @@ class CogneeMemoryService(LocalMemoryService):
         }
         if self.tenant_id:
             headers["X-Tenant-Id"] = self.tenant_id
-        start = time.perf_counter()
-        call: dict[str, Any] = {
-            "provider": "cognee",
-            "direction": "backend_to_memory",
-            "method": method,
-            "endpoint": path,
-            "auth": {
-                "x_api_key": "redacted",
-                "x_tenant_id": "configured" if self.tenant_id else "not_configured",
-            },
-            "request": self._sanitize_request(kwargs),
-        }
-        try:
-            with httpx.Client(timeout=self.timeout) as client:
-                response = client.request(method, url, headers=headers, **kwargs)
-                call["latency_ms"] = round((time.perf_counter() - start) * 1000, 2)
-                call["response"] = {
-                    "status_code": response.status_code,
-                    "ok": response.is_success,
-                    "body": self._response_body(response),
-                }
-                call["status"] = "ok" if response.is_success else "error"
-                response.raise_for_status()
+        attempts: list[dict[str, Any]] = []
+        max_attempts = self.max_retries + 1
+        for attempt in range(1, max_attempts + 1):
+            start = time.perf_counter()
+            call: dict[str, Any] = {
+                "provider": "cognee",
+                "direction": "backend_to_memory",
+                "method": method,
+                "endpoint": path,
+                "attempt": attempt,
+                "max_attempts": max_attempts,
+                "auth": {
+                    "x_api_key": "redacted",
+                    "x_tenant_id": "configured" if self.tenant_id else "not_configured",
+                },
+                "request": self._sanitize_request(kwargs),
+            }
+            try:
+                with httpx.Client(timeout=self.timeout) as client:
+                    response = client.request(method, url, headers=headers, **kwargs)
+                    call["latency_ms"] = round((time.perf_counter() - start) * 1000, 2)
+                    call["response"] = {
+                        "status_code": response.status_code,
+                        "ok": response.is_success,
+                        "body": self._response_body(response),
+                    }
+                    call["status"] = "ok" if response.is_success else "error"
+                    response.raise_for_status()
+                    if attempts:
+                        call["previous_attempts"] = attempts
+                    return call
+            except Exception as exc:
+                call["latency_ms"] = call.get("latency_ms") or round((time.perf_counter() - start) * 1000, 2)
+                call["status"] = "error"
+                call["error"] = str(exc)
+                if attempt < max_attempts and self._should_retry_cognee_call(exc, call):
+                    attempts.append(call)
+                    time.sleep(min(2.0, 0.5 * attempt))
+                    continue
+                if attempts:
+                    call["previous_attempts"] = attempts
+                if self.strict:
+                    raise MemoryBackendError(f"Cognee call failed: {exc}", communication=call) from exc
                 return call
-        except Exception as exc:
-            call["latency_ms"] = call.get("latency_ms") or round((time.perf_counter() - start) * 1000, 2)
-            call["status"] = "error"
-            call["error"] = str(exc)
-            if self.strict:
-                raise MemoryBackendError(f"Cognee call failed: {exc}", communication=call) from exc
-            return call
+
+        raise MemoryBackendError("Cognee call failed after retry loop without a response")
+
+    def _should_retry_cognee_call(self, exc: Exception, call: dict[str, Any]) -> bool:
+        if isinstance(exc, (httpx.TimeoutException, httpx.TransportError)):
+            return True
+        status_code = call.get("response", {}).get("status_code")
+        return status_code in {408, 429} or (isinstance(status_code, int) and status_code >= 500)
 
     def _sanitize_request(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         request: dict[str, Any] = {}

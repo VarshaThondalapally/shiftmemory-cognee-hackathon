@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+import os
+import time
+from collections import defaultdict, deque
+from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
@@ -33,6 +40,11 @@ intelligence = make_intelligence_service()
 WATCH_TERMS = ("overnight", "3 am", "3am", "woke", "restless", "settled", "quiet room", "water", "medication")
 PREFERENCE_TERMS = ("breakfast", "oatmeal", "orange juice", "preference", "avoid")
 FAMILY_TERMS = ("family", "mira", "call", "callback", "update", "before 9")
+RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("DEMO_RATE_LIMIT_WINDOW_SECONDS", "600"))
+RATE_LIMIT_API_REQUESTS = int(os.getenv("DEMO_RATE_LIMIT_API_REQUESTS", "240"))
+RATE_LIMIT_MUTATION_REQUESTS = int(os.getenv("DEMO_RATE_LIMIT_MUTATION_REQUESTS", "60"))
+API_REQUESTS: defaultdict[str, deque[float]] = defaultdict(deque)
+MUTATION_REQUESTS: defaultdict[str, deque[float]] = defaultdict(deque)
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,6 +53,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def rate_limit_api(request: Request, call_next):
+    if request.url.path.startswith("/v1/"):
+        client = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        client = client or (request.client.host if request.client else "unknown")
+        now = time.time()
+        if too_many_requests(API_REQUESTS[client], now, RATE_LIMIT_API_REQUESTS):
+            return JSONResponse({"detail": "rate_limited"}, status_code=429)
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            mutation_key = f"{client}:{request.url.path}"
+            if too_many_requests(MUTATION_REQUESTS[mutation_key], now, RATE_LIMIT_MUTATION_REQUESTS):
+                return JSONResponse({"detail": "mutation_rate_limited"}, status_code=429)
+    return await call_next(request)
 
 
 class NoteCreate(BaseModel):
@@ -300,10 +327,22 @@ def contains_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(term in text for term in terms)
 
 
+def too_many_requests(bucket: deque[float], now: float, limit: int) -> bool:
+    while bucket and now - bucket[0] > RATE_LIMIT_WINDOW_SECONDS:
+        bucket.popleft()
+    if len(bucket) >= limit:
+        return True
+    bucket.append(now)
+    return False
+
+
 def verify_handoff(handoff: dict[str, Any], sources: list[dict[str, Any]]) -> dict[str, Any]:
     source_by_id = {item["id"]: item for item in sources}
+    summary = handoff.get("summary")
+    if not isinstance(summary, str) or not summary.strip():
+        summary = "Morning handoff generated from verified remembered notes."
     verified = {
-        "summary": str(handoff.get("summary") or "Morning handoff generated from verified remembered notes."),
+        "summary": summary,
         "safety_note": "This is a workflow handoff draft from remembered notes, not medical advice.",
         "writer": handoff.get("writer") or intelligence.status()["name"],
     }
@@ -337,3 +376,22 @@ def verify_handoff(handoff: dict[str, Any], sources: list[dict[str, Any]]) -> di
             )
         verified[bucket] = verified_items[:3]
     return verified
+
+
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+if FRONTEND_DIST.exists():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend-assets")
+
+    @app.get("/", include_in_schema=False)
+    def frontend_index() -> FileResponse:
+        return FileResponse(FRONTEND_DIST / "index.html")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def frontend_spa(full_path: str) -> FileResponse:
+        if full_path.startswith(("v1/", "healthz")):
+            raise HTTPException(status_code=404, detail="not_found")
+        target = FRONTEND_DIST / full_path
+        if target.is_file():
+            return FileResponse(target)
+        return FileResponse(FRONTEND_DIST / "index.html")

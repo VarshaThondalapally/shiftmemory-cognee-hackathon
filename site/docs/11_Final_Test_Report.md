@@ -13,6 +13,8 @@ Scope: final hackathon submission flow using the FastAPI backend, React frontend
 - Gemini model: `gemini-flash-lite-latest`
 - Browser keys: none
 - Backend secrets: local `.env` only, ignored by Git
+- Live deployment shape: one Docker web service serving FastAPI and React from the same origin
+- Cognee max retries: 2 for transient transport/server failures
 
 ## Live Product Scenario
 
@@ -51,6 +53,8 @@ Scope: final hackathon submission flow using the FastAPI backend, React frontend
 - Git diff whitespace check: `git diff --check`
 - GitHub Pages workflow: success on the final commit
 - Public Pages URL: HTTP 200
+- Docker deployment files present: `Dockerfile`, `.dockerignore`, `render.yaml`
+- Secured smoke test result after deployment packaging: `PASS: handoff memory demo lifecycle works end to end`
 
 ## Security Checks
 
@@ -59,10 +63,12 @@ Scope: final hackathon submission flow using the FastAPI backend, React frontend
 - Cognee and Gemini calls are made from the backend only.
 - Proof traces redact authentication values.
 - Handoff output is verified against recalled source ids before returning to the UI.
+- JWT authentication and role-based access are enforced in the smoke test.
+- Public demo rate limits are configured for API and mutation routes.
 
 ## Known Boundaries
 
 - Demo data is synthetic.
 - This is not medical advice.
 - This is not HIPAA compliant.
-- The public Pages site is a submission and runbook surface; the live app still runs through the local or hosted backend because secrets must remain server-side.
+- The public Pages site is a submission and runbook surface. The interactive product must run through the local or hosted backend because secrets must remain server-side.

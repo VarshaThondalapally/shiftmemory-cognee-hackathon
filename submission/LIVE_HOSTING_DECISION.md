@@ -2,39 +2,54 @@
 
 ## Recommendation
 
-Submit with:
+Submit with a hosted FastAPI/React product URL if the deployment is verified before the deadline.
+
+Also include:
 
 - GitHub repository.
 - GitHub Pages landing page.
-- YouTube demo video.
-- Local demo runbook.
+- Demo video.
+- Local runbook and AI usage disclosure.
 
-Do not rush a public backend unless there is enough time to deploy and verify it carefully.
+## Submitted Live URL
 
-## Why
+`https://factors-needle-issued-partition.trycloudflare.com`
 
-The interactive app depends on a FastAPI backend. That backend holds Cognee and Gemini API keys, performs role checks, and calls the memory layer.
+This is a Cloudflare quick tunnel to the local FastAPI/React app. Cognee and Gemini keys remain server-side in the backend process. The URL works only while the laptop, backend server, and tunnel process stay running.
 
-GitHub Pages can host static files only. It cannot securely run the backend.
+## API Key Rule
 
-## What A Real Public Deployment Needs
+Cognee and Gemini keys must stay server-side.
 
-- Hosted React frontend.
-- Hosted FastAPI backend.
-- Server-side environment variables for Cognee and Gemini keys.
-- CORS restricted to the frontend domain.
-- HTTPS.
-- Rate limits.
-- Logs and error tracing.
-- Secret rotation.
-- Health check endpoint exposed to the host.
+Do not put keys in:
 
-## Fast Deployment Options
+- GitHub Pages.
+- React/Vite browser env vars.
+- form answers.
+- screenshots or videos.
+- repository files.
 
-- Frontend: Vercel, Netlify, or GitHub Pages.
-- Backend: Render, Railway, Fly.io, Azure App Service, or Google Cloud Run.
-- Secrets: host-managed environment variables.
+Use the host's environment-variable UI or secret manager.
 
-## Current Honest Statement
+## Current Deployment Readiness
 
-"The public link is the landing and demo explainer. The full interactive product runs locally with a FastAPI backend because Cognee and Gemini keys must remain server-side."
+The repo includes:
+
+- `Dockerfile`: one service that builds React and serves it from FastAPI.
+- `render.yaml`: Render blueprint with Cognee/Gemini secrets marked `sync: false`.
+- `.dockerignore`: excludes local env files and local memory cache.
+- same-origin frontend API fallback.
+- JWT auth and role-based access control.
+- public-demo rate limits to protect Cognee/Gemini balance.
+- Cognee retry logic for transient transport/server failures.
+
+## Backup If Hosting Is Not Finished
+
+If a hosted backend cannot be verified in time, submit:
+
+1. GitHub Pages landing page.
+2. GitHub repo.
+3. Demo video showing the real app flow.
+4. Honest note that the interactive product is deploy-ready and was verified locally against Cognee Cloud and Gemini.
+
+Do not submit `localhost`.

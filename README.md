@@ -93,6 +93,7 @@ COGNEE_STRICT=true
 COGNEE_DATASET_PREFIX=handoff-demo
 COGNEE_ALLOW_LOCAL_RANK_FALLBACK=false
 COGNEE_TIMEOUT_SECONDS=120
+COGNEE_MAX_RETRIES=2
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_key
 GEMINI_MODEL=gemini-flash-lite-latest
@@ -102,6 +103,14 @@ LLM_STRICT=true
 Use the hackathon Cognee balance only for lifecycle actions: add note, generate handoff, ask question, prioritize, remove, and demo reset. Do not spend it on page refreshes or UI navigation.
 
 For local development without paid or hackathon API calls, copy `apps/backend/.env.example` instead. That keeps `MEMORY_BACKEND=local` and leaves `LLM_PROVIDER` empty so the deterministic fallback is used.
+
+## Live Deployment
+
+The repo can be deployed as one Docker web service. The FastAPI backend serves both the API and the built React app, so Cognee and Gemini keys stay server-side.
+
+Use `Dockerfile`, `.dockerignore`, and `render.yaml` to deploy on Render or a similar Docker host. Set Cognee/Gemini keys only in the host environment variables, never in GitHub Pages or frontend env vars.
+
+Deployment details are in [`docs/12_LIVE_DEMO_DEPLOYMENT.md`](docs/12_LIVE_DEMO_DEPLOYMENT.md).
 
 ## What The Proof Screen Shows
 

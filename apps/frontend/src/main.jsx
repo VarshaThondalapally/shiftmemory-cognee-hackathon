@@ -13,7 +13,15 @@ import {
 } from "lucide-react";
 import "./styles.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+function defaultApiUrl() {
+  if (typeof window === "undefined") return "http://127.0.0.1:8001";
+  const { hostname, origin, port } = window.location;
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+  if (isLocal && port === "5173") return "http://127.0.0.1:8001";
+  return origin;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl();
 const AUTH_STORAGE_KEY = "handoff-demo-auth";
 
 const screens = [

@@ -16,13 +16,13 @@ A secure role-based handoff app where night caregivers save shift details once, 
 
 ## Deployed Link
 
-`https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/`
+`https://factors-needle-issued-partition.trycloudflare.com`
 
-Note: the deployed link is the public landing/demo explainer. The full interactive app currently runs locally because it requires a FastAPI backend with Cognee and Gemini server-side keys.
+Note: this is a Cloudflare quick tunnel to the live FastAPI/React app, with Cognee and Gemini keys kept server-side. GitHub Pages remains the public explainer: `https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/`
 
 ## Demo Video Link
 
-Upload `submission/video/caregiver-handoff-memory-demo.mp4` to YouTube as unlisted, then paste the YouTube URL here.
+`https://varshathondalapally.github.io/shiftmemory-cognee-hackathon/assets/video/caregiver-handoff-memory-demo.mp4`
 
 The video is a real walkthrough captured from the running product: supervisor assignment, night caregiver note capture, morning handoff recall, source-backed follow-up answer, supervisor improve action, and technical proof mode.
 
