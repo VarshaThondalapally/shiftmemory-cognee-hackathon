@@ -118,6 +118,76 @@ nav a:hover,
     url("images/care-handoff-hero.png") center / cover no-repeat;
 }
 
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 480px);
+  gap: clamp(32px, 6vw, 72px);
+  align-items: center;
+  padding: clamp(72px, 11vw, 126px) clamp(18px, 5vw, 72px);
+  background:
+    linear-gradient(90deg, rgba(15, 107, 85, 0.1), rgba(47, 99, 136, 0.08)),
+    var(--paper);
+  border-bottom: 1px solid rgba(20, 32, 27, 0.08);
+}
+
+.hero-copy .lede {
+  color: var(--muted);
+}
+
+.hero-copy .button.secondary {
+  border-color: var(--line);
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.handoff-preview {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.preview-head {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.preview-head span,
+.source-strip span {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.preview-head strong {
+  font-size: 24px;
+}
+
+.handoff-lines {
+  display: grid;
+  gap: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.source-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.source-strip span {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f3fbf7;
+}
+
 .hero-shade {
   position: absolute;
   inset: auto 0 0;
@@ -204,10 +274,13 @@ h3 {
 
 .target-section,
 .workflow-section,
+.flow-section,
+.access-section,
 .product-section,
 .cognee-section,
 .comparison-section,
 .demo-section,
+.proof-section,
 .docs-section {
   padding: clamp(52px, 8vw, 98px) clamp(18px, 5vw, 72px);
   border-bottom: 1px solid rgba(20, 32, 27, 0.08);
@@ -270,7 +343,12 @@ h3 {
   background: var(--soft);
 }
 
-.workflow-section h2 {
+.flow-section {
+  background: var(--soft);
+}
+
+.workflow-section h2,
+.flow-section h2 {
   margin-bottom: 34px;
 }
 
@@ -278,6 +356,47 @@ h3 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
+}
+
+.journey {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journey li {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) minmax(160px, auto);
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.journey p {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.journey strong {
+  color: var(--green);
+  text-align: right;
+}
+
+.step-number {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--ink);
+  font-weight: 900;
 }
 
 .shift-timeline article {
@@ -290,6 +409,56 @@ h3 {
   margin-top: 12px;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.access-section {
+  background: #ffffff;
+}
+
+.access-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(340px, 1fr);
+  gap: clamp(34px, 7vw, 90px);
+  align-items: start;
+}
+
+.access-layout p {
+  max-width: 780px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1.62;
+}
+
+.access-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.access-grid article {
+  min-height: 170px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.access-grid span,
+.auth-chip,
+.assignment-mini span {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.access-grid strong {
+  font-size: 18px;
+  line-height: 1.35;
 }
 
 .product-heading {
@@ -374,15 +543,33 @@ h3 {
 .handoff-block,
 .input-row,
 .review-row,
-.trace-row {
+.trace-row,
+.auth-chip,
+.assignment-mini {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
 }
 
 .note-card,
-.handoff-block {
+.handoff-block,
+.auth-chip,
+.assignment-mini {
   padding: 16px;
+}
+
+.auth-chip {
+  color: var(--green);
+  background: #f3fbf7;
+}
+
+.assignment-mini {
+  display: grid;
+  gap: 6px;
+}
+
+.assignment-mini strong {
+  color: var(--ink);
 }
 
 .note-card.hot {
@@ -502,6 +689,58 @@ h3 {
   text-transform: uppercase;
 }
 
+.operation-list {
+  min-height: 360px;
+  margin: 0;
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101815;
+  color: #d8f4e9;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.proof-section {
+  background: #f4f6f7;
+}
+
+.proof-section h2 {
+  margin-bottom: 24px;
+}
+
+.proof-rail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 1120px;
+}
+
+.proof-rail p {
+  color: var(--muted);
+  font-size: 19px;
+  line-height: 1.62;
+}
+
+.architecture-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.architecture-line span {
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--green);
+  background: var(--panel);
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .comparison-section {
   background: #f4f6f7;
 }
@@ -526,6 +765,13 @@ h3 {
   gap: 30px;
   align-items: center;
   background: #ffffff;
+}
+
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .docs-section {
@@ -585,15 +831,23 @@ footer span:first-child {
 @media (max-width: 980px) {
   .target-layout,
   .product-heading,
+  .hero,
   .demo-shell,
+  .access-layout,
   .cognee-layout,
   .demo-section {
     grid-template-columns: 1fr;
   }
 
   .shift-timeline,
-  .comparison-grid {
+  .comparison-grid,
+  .access-grid,
+  .proof-rail {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .demo-actions {
+    justify-content: flex-start;
   }
 }
 
@@ -614,8 +868,18 @@ footer span:first-child {
   }
 
   .shift-timeline,
-  .comparison-grid {
+  .comparison-grid,
+  .access-grid,
+  .proof-rail {
     grid-template-columns: 1fr;
+  }
+
+  .journey li {
+    grid-template-columns: 1fr;
+  }
+
+  .journey strong {
+    text-align: left;
   }
 
   .phone-frame {

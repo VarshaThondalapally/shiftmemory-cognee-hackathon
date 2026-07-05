@@ -13,9 +13,10 @@
         <span>Handoff Memory</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="index.html#problem">Problem</a>
-        <a href="index.html#flow">Flow</a>
-        <a href="index.html#memory">Architecture</a>
+        <a href="index.html#who">Teams</a>
+        <a href="index.html#workflow">Flow</a>
+        <a href="index.html#security">Access</a>
+        <a href="index.html#cognee">Memory</a>
         <a href="index.html#docs">Docs</a>
       </nav>
     </header>
@@ -24,12 +25,12 @@
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow">Hackathon submission</p>
-          <h1>Run the real product, not the old mock.</h1>
+          <h1>Run the authenticated product from end to end.</h1>
           <p class="lede">
             The live product is the React and FastAPI app in the repository.
             This page is the judge runbook: configure Cognee and Gemini, start
-            the backend and frontend, then open the Proof tab to inspect every
-            memory call.
+            the backend and frontend, sign in as each demo role, then inspect
+            the proof workspace for every memory call.
           </p>
           <div class="actions">
             <a class="button primary" href="https://github.com/VarshaThondalapally/shiftmemory-cognee-hackathon">Open repository</a>
@@ -45,7 +46,7 @@
           <div class="handoff-lines">
             <p><b>Reasoning:</b> Gemini understands notes and creates recall plans.</p>
             <p><b>Memory:</b> Cognee remembers, recalls, improves, and forgets notes.</p>
-            <p><b>Verifier:</b> backend accepts only source-backed handoff items.</p>
+            <p><b>Verifier:</b> backend enforces JWT roles and accepts only source-backed handoff items.</p>
           </div>
           <div class="source-strip" aria-label="Lifecycle">
             <span>remember</span>
@@ -87,12 +88,44 @@
           <li>
             <span class="step-number">4</span>
             <div>
-              <h3>Open Proof</h3>
-              <p>Add a note, generate a handoff, prioritize a source, remove a source, then inspect the communication trace.</p>
+              <h3>Run role-based demo</h3>
+              <p>Supervisor assigns shifts, night caregiver adds a note, morning lead generates the handoff, then reviewer inspects proof.</p>
             </div>
-            <strong>redacted Cognee calls</strong>
+            <strong>JWT + RBAC + Cognee</strong>
           </li>
         </ol>
+      </section>
+
+      <section class="access-section">
+        <div class="section-kicker">Exact walkthrough</div>
+        <div class="access-layout">
+          <div>
+            <h2>Use these demo identities in order.</h2>
+            <p>
+              Each sign-in receives a JWT. The backend filters patients and allowed
+              actions from the token, so the demo proves access control and memory
+              lifecycle together.
+            </p>
+          </div>
+          <div class="access-grid">
+            <article>
+              <span>1. Rosa Lee</span>
+              <strong>Sign in as supervisor and assign night/morning caregivers.</strong>
+            </article>
+            <article>
+              <span>2. Nia Brooks</span>
+              <strong>Sign in as night caregiver and add the 3 AM observation.</strong>
+            </article>
+            <article>
+              <span>3. Omar Chen</span>
+              <strong>Sign in as morning lead and generate the source-backed handoff.</strong>
+            </article>
+            <article>
+              <span>4. Hackathon judge</span>
+              <strong>Sign in as demo reviewer and inspect redacted Cognee traces.</strong>
+            </article>
+          </div>
+        </div>
       </section>
 
       <section class="cognee-section">
@@ -141,7 +174,7 @@ LLM_STRICT=true</code></pre>
           <span>recall 200</span>
           <span>cognify 200</span>
           <span>forget 200</span>
-          <span>Gemini 2.5 Flash</span>
+          <span>Gemini Flash Lite</span>
           <span>Pages 200</span>
         </div>
       </section>

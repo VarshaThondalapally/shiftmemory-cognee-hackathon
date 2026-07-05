@@ -1,12 +1,12 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Handoff Memory - Home-Care Shift Handoffs</title>
+    <title>Handoff Memory - Secure Care Shift Handoffs</title>
     <meta
       name="description"
-      content="A memory-backed morning handoff workspace for home-care and assisted-living teams, powered by Cognee as the durable memory layer."
+      content="A secure role-based handoff system for home-care and assisted-living teams, with Cognee as the durable memory layer."
     />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
@@ -19,7 +19,8 @@
       <nav aria-label="Primary navigation">
         <a href="#who">For teams</a>
         <a href="#workflow">Workflow</a>
-        <a href="#product">Screens</a>
+        <a href="#security">Access</a>
+        <a href="#product">Workspaces</a>
         <a href="#cognee">Memory layer</a>
         <a class="nav-demo" href="demo.html">Runbook</a>
       </nav>
@@ -29,15 +30,16 @@
       <section class="hero-photo" aria-label="Care team morning handoff">
         <div class="hero-shade"></div>
         <div class="hero-content">
-          <p class="eyebrow">Care-team handoffs that remember</p>
-          <h1>Every morning starts with the right context.</h1>
+          <p class="eyebrow">Secure care-team handoffs that remember</p>
+          <h1>Every shift starts with the right context.</h1>
           <p class="lede">
-            Handoff Memory turns overnight notes into a concise, source-backed
-            morning brief for home-care and assisted-living teams. Critical
-            context stays available across shifts, reviews, questions, and cleanup.
+            Handoff Memory gives each signed-in caregiver, morning lead, and
+            supervisor the patients and actions their role allows. Cognee keeps
+            resident context alive across shifts, while the backend protects access,
+            sources, and cleanup.
           </p>
           <div class="actions">
-            <a class="button primary" href="#product">View product flow</a>
+            <a class="button primary" href="#workflow">View demo flow</a>
             <a class="button secondary" href="demo.html">Open runbook</a>
           </div>
         </div>
@@ -47,66 +49,100 @@
         <div class="section-kicker">Built for care operations</div>
         <div class="target-layout">
           <div>
-            <h2>Give the morning lead the few things that changed overnight.</h2>
+            <h2>Give every care worker the right workspace, not the whole system.</h2>
             <p>
               In home-care and assisted-living teams, overnight details can live
               across quick notes, family requests, preference changes, and shift
-              checklists. Handoff Memory keeps those details organized by resident
-              so the day team can act without rereading everything.
+              checklists. Handoff Memory keeps those details organized by resident,
+              then uses login, role checks, and assignments so each person sees
+              only the patients they are responsible for.
             </p>
           </div>
           <div class="role-stack" aria-label="Users">
             <article>
               <span>Night caregiver</span>
-              <strong>Captures what changed during the shift</strong>
+              <strong>Sees assigned residents and saves what changed</strong>
             </article>
             <article>
               <span>Morning care lead</span>
-              <strong>Starts the day with a concise resident brief</strong>
+              <strong>Opens assigned handoffs and asks follow-up questions</strong>
             </article>
             <article>
               <span>Supervisor</span>
-              <strong>Keeps important context prioritized and stale notes out</strong>
+              <strong>Assigns shifts and keeps stale notes out</strong>
             </article>
           </div>
         </div>
       </section>
 
       <section class="workflow-section" id="workflow">
-        <div class="section-kicker">A day in the product</div>
-        <h2>From night note to morning action, without rebuilding context.</h2>
+        <div class="section-kicker">Submission demo flow</div>
+        <h2>Run the product like a care team, then inspect it like a judge.</h2>
         <div class="shift-timeline" aria-label="Shift handoff timeline">
           <article>
-            <span>2:55 AM</span>
-            <h3>Overnight observation</h3>
-            <p>Avery woke twice, asked for water, and settled in a quiet room.</p>
+            <span>1. Supervisor</span>
+            <h3>Assign the shift</h3>
+            <p>Rosa assigns night and morning caregivers to Avery or Maya.</p>
           </article>
           <article>
-            <span>6:45 AM</span>
-            <h3>Morning brief</h3>
-            <p>The care lead sees that note under Watch Today with its source.</p>
+            <span>2. Night caregiver</span>
+            <h3>Save the note</h3>
+            <p>Nia records the 3 AM wake-up note in her assigned workspace.</p>
           </article>
           <article>
-            <span>7:10 AM</span>
-            <h3>Review</h3>
-            <p>The lead marks the wake-up note important for the next handoff.</p>
+            <span>3. Morning lead</span>
+            <h3>Generate handoff</h3>
+            <p>Omar opens the morning workspace and gets a source-backed brief.</p>
           </article>
           <article>
-            <span>7:15 AM</span>
-            <h3>Stale note removed</h3>
-            <p>An outdated orange-juice preference is forgotten before it repeats.</p>
+            <span>4. Judge proof</span>
+            <h3>Verify memory</h3>
+            <p>Proof mode shows redacted Cognee remember, recall, improve, and forget calls.</p>
           </article>
+        </div>
+      </section>
+
+      <section class="access-section" id="security">
+        <div class="section-kicker">Access model</div>
+        <div class="access-layout">
+          <div>
+            <h2>The app starts at sign-in, not at a shared role switcher.</h2>
+            <p>
+              The live product issues a JWT for the selected demo user. The backend
+              uses that token to filter patients and reject actions outside the
+              user's role. The public role preview below is for explanation; real
+              workspaces are locked by authentication.
+            </p>
+          </div>
+          <div class="access-grid" aria-label="Role based access controls">
+            <article>
+              <span>JWT session</span>
+              <strong>Every API request carries a signed role identity.</strong>
+            </article>
+            <article>
+              <span>Assigned patients</span>
+              <strong>Caregivers and leads only receive their assigned residents.</strong>
+            </article>
+            <article>
+              <span>Server-side RBAC</span>
+              <strong>Night staff cannot call handoff or supervisor cleanup APIs.</strong>
+            </article>
+            <article>
+              <span>Supervisor control</span>
+              <strong>Shift assignment and memory cleanup live in the supervisor dashboard.</strong>
+            </article>
+          </div>
         </div>
       </section>
 
       <section class="product-section" id="product">
         <div class="section-kicker">Product experience</div>
         <div class="product-heading">
-          <h2>Each signed-in role gets the workspace they need.</h2>
+          <h2>One product, four authenticated workspaces.</h2>
           <p>
-            JWT login and server-side role checks decide which patients and
-            actions each person can access. Caregivers write notes, leads read
-            handoffs, supervisors assign shifts, and reviewers inspect proof.
+            The preview below explains what each signed-in user sees. In the live
+            app, these are not tabs for workers. They are separate workspaces
+            selected by login, assignment, and role.
           </p>
         </div>
 
@@ -125,6 +161,7 @@
                 <strong>Avery Johnson</strong>
               </div>
               <div class="screen-content" id="screenContent">
+                <div class="auth-chip">Signed in as Nia Brooks</div>
                 <div class="note-card hot">
                   <span>Quick note</span>
                   <p>At 3 AM Avery woke twice, asked for water, and settled after the room was quiet.</p>
@@ -134,21 +171,21 @@
                   <strong>Save</strong>
                 </div>
                 <div class="micro-list">
-                  <p><b>Family</b> asked for update before 9 AM.</p>
-                  <p><b>Task</b> send blue laundry bag after lunch.</p>
+                  <p><b>Assigned patient</b> Avery Johnson</p>
+                  <p><b>Hidden</b> supervisor cleanup and proof tools</p>
                 </div>
               </div>
             </div>
 
             <div class="screen-explainer">
               <p class="eyebrow">In the product</p>
-              <h3 id="roleTitle">A quick note becomes part of the resident history.</h3>
+              <h3 id="roleTitle">The night caregiver only sees assigned residents.</h3>
               <p id="roleCopy">
-                The caregiver records what changed during the shift. The resident
-                history is updated in the background.
+                Nia signs in, receives a JWT, sees her assigned residents, and saves
+                the few changes the morning team should not miss.
               </p>
               <div class="memory-callout" id="roleMemory">
-                Behind the scenes: Cognee remembers the note.
+                Behind the scenes: the backend writes the note to Cognee as resident-scoped memory.
               </div>
             </div>
           </div>
@@ -159,11 +196,12 @@
         <div class="section-kicker">Memory layer</div>
         <div class="cognee-layout">
           <div>
-            <h2>Cognee keeps the resident context alive between shifts.</h2>
+            <h2>Cognee is the memory layer behind the handoff.</h2>
             <p>
-              A regular AI chat can only summarize what someone remembers to paste.
-              Handoff Memory uses Cognee as the persistent memory layer, so notes
-              can be remembered, recalled, improved by review, and forgotten when stale.
+              Care workers do not operate Cognee directly. The backend writes notes
+              to Cognee, recalls resident-scoped context for handoffs, sends review
+              feedback for improvement, and forgets stale notes before they mislead
+              the next shift.
             </p>
           </div>
           <div class="memory-map" aria-label="Care workflow mapped to Cognee memory">
@@ -189,19 +227,19 @@
 
       <section class="comparison-section">
         <div class="section-kicker">Why it matters</div>
-        <h2>This is not another chat box for care notes.</h2>
+        <h2>This is not a shared chat box with medical-looking notes.</h2>
         <div class="comparison-grid">
           <article>
             <h3>Generic LLM workflow</h3>
-            <p>Someone has to paste yesterday's context again. If they forget, the answer starts from zero.</p>
+            <p>Someone has to paste yesterday's context again, and everyone tends to see the same broad workspace.</p>
           </article>
           <article>
             <h3>Handoff Memory workflow</h3>
-            <p>The case remembers prior notes, recalls the right sources, improves from review, and forgets stale information.</p>
+            <p>Users sign in, see assigned patients, and get source-backed memory only through their permitted workflow.</p>
           </article>
           <article>
             <h3>What the business gets</h3>
-            <p>Faster morning briefings, fewer repeated questions, clearer source history, and safer cleanup of outdated notes.</p>
+            <p>Faster handoffs, clearer accountability, patient-scoped recall, and safer cleanup of outdated notes.</p>
           </article>
         </div>
       </section>
@@ -209,13 +247,17 @@
       <section class="demo-section" id="demo">
         <div>
           <div class="section-kicker">Demo</div>
-          <h2>Use the app like a care team. Inspect proof like a judge.</h2>
+          <h2>Sign in as each demo user to prove the access model.</h2>
           <p>
-            The product flow stays focused on the handoff. The runbook explains
-            how to verify Cognee calls without exposing keys in the browser.
+            Start with the supervisor, assign shifts, then sign in as night caregiver
+            and morning lead. Finish as the demo reviewer to inspect Cognee proof
+            without exposing API keys in the browser.
           </p>
         </div>
-        <a class="button primary" href="demo.html">Open runbook</a>
+        <div class="demo-actions">
+          <a class="button primary" href="demo.html">Open runbook</a>
+          <a class="button" href="https://github.com/VarshaThondalapally/shiftmemory-cognee-hackathon">View repo</a>
+        </div>
       </section>
 
       <section class="docs-section" id="docs">
@@ -251,11 +293,12 @@
       const roleData = {
         night: {
           label: "Night caregiver",
-          title: "A quick note becomes part of the resident history.",
+          title: "The night caregiver only sees assigned residents.",
           copy:
-            "The caregiver records what changed during the shift. The resident history is updated in the background.",
-          memory: "Behind the scenes: Cognee remembers the note.",
+            "Nia signs in, receives a JWT, sees her assigned residents, and saves the few changes the morning team should not miss.",
+          memory: "Behind the scenes: the backend writes the note to Cognee as resident-scoped memory.",
           html: `
+            <div class="auth-chip">Signed in as Nia Brooks</div>
             <div class="note-card hot">
               <span>Quick note</span>
               <p>At 3 AM Avery woke twice, asked for water, and settled after the room was quiet.</p>
@@ -265,22 +308,23 @@
               <strong>Save</strong>
             </div>
             <div class="micro-list">
-              <p><b>Family</b> asked for update before 9 AM.</p>
-              <p><b>Task</b> send blue laundry bag after lunch.</p>
+              <p><b>Assigned patient</b> Avery Johnson</p>
+              <p><b>Hidden</b> supervisor cleanup and proof tools</p>
             </div>
           `,
         },
         morning: {
           label: "Morning care lead",
-          title: "The morning lead starts with the resident’s latest context.",
+          title: "The morning lead starts from assigned resident context.",
           copy:
-            "The lead sees what changed overnight, what must happen before 9 AM, and which source note each item came from.",
-          memory: "Behind the scenes: Cognee recalls relevant case memory.",
+            "Omar signs in, opens the assigned resident, and generates a handoff from source-backed notes without asking Nia to repeat the shift.",
+          memory: "Behind the scenes: the backend asks Cognee to recall relevant resident memory.",
           html: `
+            <div class="auth-chip">Signed in as Omar Chen</div>
             <div class="handoff-block urgent">
               <span>Before 9 AM</span>
               <p>Call Mira before breakfast with a family update.</p>
-              <small>Source: night worker note</small>
+              <small>Source: night caregiver note</small>
             </div>
             <div class="handoff-block">
               <span>Watch today</span>
@@ -288,9 +332,8 @@
               <small>Source: overnight observation</small>
             </div>
             <div class="handoff-block">
-              <span>Later today</span>
-              <p>Send the blue laundry bag with family pickup after lunch.</p>
-              <small>Source: shift checklist</small>
+              <span>Follow-up</span>
+              <p>Ask: what changed after 3 AM?</p>
             </div>
           `,
         },
@@ -298,9 +341,17 @@
           label: "Supervisor",
           title: "The supervisor assigns shifts and keeps handoffs useful.",
           copy:
-            "Supervisors decide which night and morning caregivers own each resident, then mark high-signal notes important or remove stale instructions.",
-          memory: "Behind the scenes: Cognee improves and forgets memory.",
+            "Rosa signs in to assign caregivers to residents, then prioritizes useful context or removes stale instructions before the next handoff.",
+          memory: "Behind the scenes: supervisor review sends improve and forget operations to Cognee.",
           html: `
+            <div class="assignment-mini">
+              <span>Avery Johnson</span>
+              <strong>Nia night / Omar morning</strong>
+            </div>
+            <div class="assignment-mini">
+              <span>Maya Patel</span>
+              <strong>Assign night caregiver</strong>
+            </div>
             <div class="review-row">
               <p>3 AM wake-up note</p>
               <strong>Important</strong>
@@ -309,19 +360,16 @@
               <p>Old orange-juice preference</p>
               <strong>Forget</strong>
             </div>
-            <div class="note-card">
-              <span>Result</span>
-              <p>Future handoffs keep the wake-up context and stop showing the stale preference.</p>
-            </div>
           `,
         },
         judge: {
           label: "Proof mode",
-          title: "Technical proof is available without exposing keys.",
+          title: "The demo reviewer can inspect proof without seeing secrets.",
           copy:
-            "Proof mode shows redacted backend-to-Cognee calls, source ids, latencies, and lifecycle status.",
-          memory: "Verified memory lifecycle: remember, recall, cognify, forget.",
+            "The reviewer login can move across the preview screens and inspect redacted backend-to-Cognee calls, source ids, latencies, and lifecycle status.",
+          memory: "Verified lifecycle: remember, recall, improve/cognify, forget.",
           html: `
+            <div class="auth-chip">Signed in as Hackathon judge</div>
             <div class="trace-row">
               <span>/api/v1/remember</span>
               <strong>200</strong>
@@ -341,7 +389,6 @@
           `,
         },
       };
-
       const demo = document.querySelector("[data-role-demo]");
       if (demo) {
         const buttons = demo.querySelectorAll("[data-role]");
@@ -367,3 +414,4 @@
     </script>
   </body>
 </html>
+
