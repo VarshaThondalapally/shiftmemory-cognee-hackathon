@@ -21,7 +21,16 @@ function defaultApiUrl() {
   return origin;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl();
+function resolveApiUrl() {
+  const configuredUrl = import.meta.env.VITE_API_URL || "";
+  if (typeof window === "undefined") return configuredUrl || defaultApiUrl();
+  const isLocalPage = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const isLocalApi = configuredUrl.includes("localhost") || configuredUrl.includes("127.0.0.1");
+  if (configuredUrl && (!isLocalApi || isLocalPage)) return configuredUrl;
+  return defaultApiUrl();
+}
+
+const API_URL = resolveApiUrl();
 const AUTH_STORAGE_KEY = "handoff-demo-auth";
 
 const screens = [
